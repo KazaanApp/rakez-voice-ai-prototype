@@ -199,11 +199,11 @@
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
                   <label for="editPhoneInput" class="block text-[11px] text-slate-700 font-bold mb-0.5">📞 Customer Phone to Call</label>
-                  <input id="editPhoneInput" type="text" value="+971504439812" placeholder="+97150..." class="w-full bg-white border-2 border-teal-500 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono font-bold text-xs shadow-sm" />
+                  <input id="editPhoneInput" type="text" value="+971561236604" placeholder="+97150..." class="w-full bg-white border-2 border-teal-500 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono font-bold text-xs shadow-sm" />
                 </div>
                 <div>
                   <label for="editEmailInput" class="block text-[11px] text-slate-700 font-bold mb-0.5">✉️ Associated Client Email</label>
-                  <input id="editEmailInput" type="email" value="m.karjikar@rakez.com" placeholder="client@example.com" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono text-xs" />
+                  <input id="editEmailInput" type="email" value="mussab.karjikar@gmail.com" placeholder="client@example.com" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono text-xs" />
                 </div>
               </div>
 
@@ -639,7 +639,7 @@
             </div>
             <div>
               <label for="monitoredClientEmailInput" class="block text-slate-600 font-bold mb-1">Monitored Client Email ID (Sender)</label>
-              <input id="monitoredClientEmailInput" type="email" value="m.karjikar@rakez.com" placeholder="Type client email to monitor..." class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono font-semibold text-xs" />
+              <input id="monitoredClientEmailInput" type="email" value="mussab.karjikar@gmail.com" placeholder="Type client email to monitor..." class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono font-semibold text-xs" />
             </div>
           </div>
 
@@ -716,8 +716,8 @@ py voice_ai_orchestrator_prototype.py --dial +97150xxxxxxx "Mr. Tariq"</pre>
         first_name: "Tariq",
         full_name: "Tariq Al-Mansoori",
         company_name: "Al-Mansoori Industrial LLC",
-        phone_e164: "+971504439812",
-        email: "m.karjikar@rakez.com",
+        phone_e164: "+971561236604",
+        email: "mussab.karjikar@gmail.com",
         segment: "Al Hamra Industrial Zone",
         tier_label: "Industrial VIP",
         whitelisted_for_personal_caller_id: true,
@@ -1404,7 +1404,29 @@ py voice_ai_orchestrator_prototype.py --dial +97150xxxxxxx "Mr. Tariq"</pre>
       container.scrollTop = container.scrollHeight;
     }
 
-    function startOutboundCall() {
+    function playPhoneRingbackTone(durationMs = 2200) {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc1.frequency.value = 400;
+        osc2.frequency.value = 450;
+        gain.gain.value = 0.08;
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(ctx.destination);
+        osc1.start();
+        osc2.start();
+        setTimeout(() => {
+          try { gain.gain.value = 0; osc1.stop(); osc2.stop(); ctx.close(); } catch (e) {}
+        }, durationMs);
+      } catch (e) {}
+    }
+
+    async function startOutboundCall() {
       const compliance = evaluateCompliance();
       if (!compliance.allowed) {
         showToast(compliance.title + " — " + compliance.reason, true);
@@ -1412,7 +1434,44 @@ py voice_ai_orchestrator_prototype.py --dial +97150xxxxxxx "Mr. Tariq"</pre>
       }
 
       const customer = getActiveCustomer();
+      const ringReal = document.getElementById("ringRealMobileToggle")?.checked;
+      const greeting = `Hello ${customer.respectful_name}, good day! This is Noura calling from the Client Relations team at RAKEZ on a recorded line. How are you doing today? I was calling to check in on your experience with us and share a couple of pre-approved renewal benefits on your profile—do you have a quick minute?`;
 
+      // Show DIALING / RINGING state first (never jump straight to speaking at 0.0s!)
+      document.getElementById("startCallBtn").disabled = true;
+      document.getElementById("startCallBtn").classList.add("opacity-50");
+      document.getElementById("endCallBtn").disabled = false;
+
+      const avatar = document.getElementById("callAvatar");
+      avatar.textContent = "📲";
+      avatar.className = "w-11 h-11 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center text-lg pulse-call";
+      document.getElementById("callStatusText").textContent = `DIALING ${customer.phone_e164}... RINGING`;
+      document.getElementById("callSubtext").textContent = `Calling ${customer.respectful_name} (${customer.phone_e164})`;
+      updateDialogueStateUI(`Dialing ${customer.phone_e164}...`);
+
+      const container = document.getElementById("transcriptContainer");
+      container.innerHTML = `
+        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center space-y-1.5 my-3">
+          <div class="text-sm font-bold text-amber-900">📲 Dialing ${customer.respectful_name} at ${customer.phone_e164}...</div>
+          <div class="text-xs text-amber-700">${ringReal ? "Connecting live outbound call via Twilio..." : "Ringing customer line..."}</div>
+        </div>
+      `;
+
+      playPhoneRingbackTone(1800);
+
+      // If "Ring Real Mobile Phone" is checked, dial the physical phone FIRST!
+      if (ringReal) {
+        const ok = await triggerBrowserDirectTwilioCall(customer, greeting);
+        if (!ok) {
+          // Stop here if Twilio returned 400 so the laptop doesn't falsely start speaking!
+          endActiveCall("Twilio Call Blocked — See Fix Banner");
+          return;
+        }
+      } else {
+        await new Promise(r => setTimeout(r, 1900));
+      }
+
+      // Now transition to CONNECTED state
       conversationState = {
         turnCount: 1,
         offersPresented: false,
@@ -1420,7 +1479,7 @@ py voice_ai_orchestrator_prototype.py --dial +97150xxxxxxx "Mr. Tariq"</pre>
         dissatisfactionCount: 0,
         history: []
       };
-      updateDialogueStateUI("Greeting & Rapport");
+      updateDialogueStateUI("Call Connected • Greeting & Rapport");
 
       document.getElementById("transferBadge").textContent = "AI Handling 100%";
       document.getElementById("transferBadge").className = "text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200";
@@ -1435,11 +1494,6 @@ py voice_ai_orchestrator_prototype.py --dial +97150xxxxxxx "Mr. Tariq"</pre>
         document.getElementById("callTimer").textContent = `${mins}:${secs}`;
       }, 1000);
 
-      document.getElementById("startCallBtn").disabled = true;
-      document.getElementById("startCallBtn").classList.add("opacity-50");
-      document.getElementById("endCallBtn").disabled = false;
-
-      const avatar = document.getElementById("callAvatar");
       avatar.textContent = "🎙️";
       avatar.className = "w-11 h-11 rounded-2xl bg-teal-500 text-slate-950 flex items-center justify-center text-lg pulse-call";
       document.getElementById("callStatusText").textContent = `CONNECTED • ${customer.respectful_name}`;
@@ -1447,19 +1501,15 @@ py voice_ai_orchestrator_prototype.py --dial +97150xxxxxxx "Mr. Tariq"</pre>
       document.getElementById("waveformBox").classList.remove("hidden");
       document.getElementById("waveformBox").classList.add("flex");
 
-      const container = document.getElementById("transcriptContainer");
       container.innerHTML = "";
-
-      const greeting = `Hello ${customer.respectful_name}, good day! This is Noura calling from the Client Relations team at RAKEZ on a recorded line. How are you doing today? I was calling to check in on your experience with us and share a couple of pre-approved renewal benefits on your profile—do you have a quick minute?`;
-
       conversationState.history.push({ role: "assistant", content: greeting });
-      appendMessage("ai", greeting, `Dialed ${customer.phone_e164} • Addressed as "${customer.respectful_name}"`);
-      speakText(greeting);
+      appendMessage("ai", greeting, `Call Answered by ${customer.respectful_name} (${customer.phone_e164})`);
 
-      // If "Ring Real Mobile Phone" is enabled in the Web App, trigger real Twilio REST API call directly from browser!
-      const ringReal = document.getElementById("ringRealMobileToggle")?.checked;
-      if (ringReal) {
-        triggerBrowserDirectTwilioCall(customer, greeting);
+      // Only speak out of laptop speakers if NOT ringing real mobile (or if user wants local audio)
+      if (!ringReal) {
+        speakText(greeting);
+      } else {
+        showToast(`📱 Your mobile phone (${customer.phone_e164}) is ringing! Answer your mobile phone to hear Noura speak.`);
       }
     }
 
@@ -1468,8 +1518,8 @@ py voice_ai_orchestrator_prototype.py --dial +97150xxxxxxx "Mr. Tariq"</pre>
       const token = (document.getElementById("twilioTokenWebInput")?.value || "").trim();
       const fromNum = (document.getElementById("twilioFromWebInput")?.value || "").trim();
       if (!sid || !token || !fromNum) {
-        showToast("To ring the physical mobile phone from the web app, enter your Twilio SID, Auth Token & Caller ID in Card 1 -> '📲 Ring Real Mobile Config'.", true);
-        return;
+        showToast("Please fill in your Twilio Account SID, Auth Token, and Twilio Trial Phone Number in Card 1.", true);
+        return false;
       }
       try {
         const cleanSpeech = formatForHumanSpeech(spokenGreeting);
@@ -1489,14 +1539,32 @@ py voice_ai_orchestrator_prototype.py --dial +97150xxxxxxx "Mr. Tariq"</pre>
         });
         if (resp.ok) {
           const data = await resp.json();
-          showToast(`📱 Ringing real phone ${customer.phone_e164} right now from the Web App! (SID: ${data.sid})`);
+          showToast(`📱 Twilio is ringing ${customer.phone_e164} right now! (Call SID: ${data.sid})`);
+          return true;
         } else {
-          const errText = await resp.text();
-          showToast(`Twilio API notice (${resp.status}): Make sure ${customer.phone_e164} is verified if using a free Twilio trial.`, true);
-          console.warn(errText);
+          let errDetail = `HTTP ${resp.status}`;
+          try {
+            const errJson = await resp.json();
+            errDetail = `Twilio Error ${errJson.code || resp.status}: ${errJson.message}`;
+          } catch (e) {}
+          const container = document.getElementById("transcriptContainer");
+          container.innerHTML = `
+            <div class="bg-rose-50 border border-rose-200 rounded-2xl p-4 text-xs text-rose-900 space-y-2 my-3">
+              <div class="font-bold text-sm text-rose-800">⚠️ Twilio Rejected the Call (${errDetail})</div>
+              <p class="leading-relaxed">Here is how to fix this in 30 seconds based on the numbers you entered:</p>
+              <ul class="list-disc pl-4 space-y-1 text-rose-800">
+                <li><strong>If ${customer.phone_e164} is not verified yet:</strong> Since you verified <code>+971561236604</code>, either put <code>+971561236604</code> into <strong>📞 Customer Phone to Call</strong>, OR add <code>${customer.phone_e164}</code> under <a href="https://console.twilio.com/us1/develop/phone-numbers/manage/verified" target="_blank" class="underline font-bold">Twilio Verified Caller IDs</a>.</li>
+                <li><strong>Check Box 3 (From Number):</strong> Box 3 must be your <strong>Twilio Trial Number</strong> (the free <code>+1...</code> number from your <a href="https://console.twilio.com/" target="_blank" class="underline font-bold">Twilio Console Dashboard</a>), NOT the same number you are calling.</li>
+                <li><strong>Enable UAE (+971) Geo Permission:</strong> Open <a href="https://console.twilio.com/us1/develop/voice/settings/geo-permissions" target="_blank" class="underline font-bold">Twilio Voice Geo Permissions</a> and check the box for <strong>United Arab Emirates (+971)</strong>.</li>
+              </ul>
+            </div>
+          `;
+          showToast(errDetail, true);
+          return false;
         }
       } catch (e) {
-        showToast("Could not reach Twilio API from browser—check your Twilio SID/Auth Token.", true);
+        showToast("Network error calling Twilio API—check your Account SID and Auth Token.", true);
+        return false;
       }
     }
 
