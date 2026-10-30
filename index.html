@@ -198,13 +198,36 @@
 
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
-                  <label for="editPhoneInput" class="block text-[11px] text-slate-600 font-medium mb-0.5">Customer Phone to Call</label>
-                  <input id="editPhoneInput" type="text" value="+971504439812" placeholder="+97150..." class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono font-semibold text-xs" />
+                  <label for="editPhoneInput" class="block text-[11px] text-slate-700 font-bold mb-0.5">📞 Customer Phone to Call</label>
+                  <input id="editPhoneInput" type="text" value="+971504439812" placeholder="+97150..." class="w-full bg-white border-2 border-teal-500 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono font-bold text-xs shadow-sm" />
                 </div>
                 <div>
-                  <label for="editEmailInput" class="block text-[11px] text-slate-600 font-medium mb-0.5">Associated Client Email</label>
-                  <input id="editEmailInput" type="email" value="tariq@almansoori-ind.ae" placeholder="client@example.com" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono text-xs" />
+                  <label for="editEmailInput" class="block text-[11px] text-slate-700 font-bold mb-0.5">✉️ Associated Client Email</label>
+                  <input id="editEmailInput" type="email" value="m.karjikar@rakez.com" placeholder="client@example.com" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono text-xs" />
                 </div>
+              </div>
+
+              <div class="flex items-center justify-between gap-2 pt-1">
+                <button id="saveDemoCustomerBtn" type="button" class="flex-1 py-1.5 px-2.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold text-[11px] transition shadow-sm">
+                  💾 Save Number &amp; Name to Demo List
+                </button>
+                <button id="toggleRealTwilioBoxBtn" type="button" class="py-1.5 px-2.5 rounded-lg bg-white hover:bg-slate-100 text-teal-800 border border-teal-300 font-semibold text-[11px] transition">
+                  📲 Ring Real Mobile Config
+                </button>
+              </div>
+
+              <!-- In-Browser Twilio Direct Calling Config (Calls any number right from the Web App!) -->
+              <div id="browserTwilioConfigBox" class="hidden pt-2 mt-1 border-t border-teal-200 space-y-2 text-[11px]">
+                <div class="flex items-center justify-between">
+                  <label for="ringRealMobileToggle" class="font-bold text-slate-800 cursor-pointer">Ring Real Mobile Phone When "Start Call" Clicked:</label>
+                  <input id="ringRealMobileToggle" type="checkbox" class="w-4 h-4 accent-teal-600 rounded cursor-pointer" />
+                </div>
+                <input id="twilioSidWebInput" type="text" placeholder="Twilio Account SID (ACxxxx...)" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1 font-mono text-[11px]" />
+                <input id="twilioTokenWebInput" type="password" placeholder="Twilio Auth Token" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1 font-mono text-[11px]" />
+                <input id="twilioFromWebInput" type="text" placeholder="Your Verified Twilio/UAE Caller ID (+971...)" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1 font-mono text-[11px]" />
+                <p class="text-[10px] text-slate-500 leading-snug">
+                  Saved in your browser. When checked, clicking <strong>Start Call</strong> dials the <strong>Customer Phone to Call</strong> above directly from this web app!
+                </p>
               </div>
             </div>
 
@@ -616,7 +639,7 @@
             </div>
             <div>
               <label for="monitoredClientEmailInput" class="block text-slate-600 font-bold mb-1">Monitored Client Email ID (Sender)</label>
-              <input id="monitoredClientEmailInput" type="email" value="tariq@almansoori-ind.ae" placeholder="Type client email to monitor..." class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono font-semibold text-xs" />
+              <input id="monitoredClientEmailInput" type="email" value="m.karjikar@rakez.com" placeholder="Type client email to monitor..." class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono font-semibold text-xs" />
             </div>
           </div>
 
@@ -694,7 +717,7 @@ py voice_ai_orchestrator_prototype.py --dial +97150xxxxxxx "Mr. Tariq"</pre>
         full_name: "Tariq Al-Mansoori",
         company_name: "Al-Mansoori Industrial LLC",
         phone_e164: "+971504439812",
-        email: "tariq@almansoori-ind.ae",
+        email: "m.karjikar@rakez.com",
         segment: "Al Hamra Industrial Zone",
         tier_label: "Industrial VIP",
         whitelisted_for_personal_caller_id: true,
@@ -1432,6 +1455,49 @@ py voice_ai_orchestrator_prototype.py --dial +97150xxxxxxx "Mr. Tariq"</pre>
       conversationState.history.push({ role: "assistant", content: greeting });
       appendMessage("ai", greeting, `Dialed ${customer.phone_e164} • Addressed as "${customer.respectful_name}"`);
       speakText(greeting);
+
+      // If "Ring Real Mobile Phone" is enabled in the Web App, trigger real Twilio REST API call directly from browser!
+      const ringReal = document.getElementById("ringRealMobileToggle")?.checked;
+      if (ringReal) {
+        triggerBrowserDirectTwilioCall(customer, greeting);
+      }
+    }
+
+    async function triggerBrowserDirectTwilioCall(customer, spokenGreeting) {
+      const sid = (document.getElementById("twilioSidWebInput")?.value || "").trim();
+      const token = (document.getElementById("twilioTokenWebInput")?.value || "").trim();
+      const fromNum = (document.getElementById("twilioFromWebInput")?.value || "").trim();
+      if (!sid || !token || !fromNum) {
+        showToast("To ring the physical mobile phone from the web app, enter your Twilio SID, Auth Token & Caller ID in Card 1 -> '📲 Ring Real Mobile Config'.", true);
+        return;
+      }
+      try {
+        const cleanSpeech = formatForHumanSpeech(spokenGreeting);
+        const twiml = `<Response><Say voice="Polly.Joanna-Neural">${cleanSpeech}</Say><Pause length="1"/><Say voice="Polly.Joanna-Neural">Looking at your Portal 360 profile, ${customer.respectful_name}, you pre-qualify for a 15 percent discount on our 3-year trade license renewal package and 3 months rent-free on Al Hamra warehouse expansion. I have sent the confirmation link to your email so you can lock it in anytime. Have a wonderful day!</Say></Response>`;
+        const bodyParams = new URLSearchParams({
+          To: customer.phone_e164,
+          From: fromNum,
+          Twiml: twiml
+        });
+        const resp = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(sid)}/Calls.json`, {
+          method: "POST",
+          headers: {
+            "Authorization": "Basic " + btoa(`${sid}:${token}`),
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          body: bodyParams.toString()
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          showToast(`📱 Ringing real phone ${customer.phone_e164} right now from the Web App! (SID: ${data.sid})`);
+        } else {
+          const errText = await resp.text();
+          showToast(`Twilio API notice (${resp.status}): Make sure ${customer.phone_e164} is verified if using a free Twilio trial.`, true);
+          console.warn(errText);
+        }
+      } catch (e) {
+        showToast("Could not reach Twilio API from browser—check your Twilio SID/Auth Token.", true);
+      }
     }
 
     function endActiveCall(reasonText = "Call Completed") {
@@ -1965,6 +2031,36 @@ Return ONLY a JSON object with:
     });
 
     document.getElementById("customerSelect").addEventListener("change", syncPresetToEditableFields);
+
+    document.getElementById("toggleRealTwilioBoxBtn").addEventListener("click", () => {
+      document.getElementById("browserTwilioConfigBox").classList.toggle("hidden");
+    });
+
+    document.getElementById("saveDemoCustomerBtn").addEventListener("click", () => {
+      const customer = getActiveCustomer();
+      const select = document.getElementById("customerSelect");
+      const opt = Array.from(select.options).find(o => o.value === customer.customer_id);
+      if (opt) {
+        opt.textContent = `${customer.respectful_name} (${customer.full_name}) — ${customer.phone_e164}`;
+      }
+      try {
+        localStorage.setItem("rakez_demo_customers", JSON.stringify(customersDB));
+      } catch (e) {}
+      showToast(`Saved ${customer.respectful_name} (${customer.phone_e164} • ${customer.email}) in the Web App for your demo!`);
+    });
+
+    ["twilioSidWebInput", "twilioTokenWebInput", "twilioFromWebInput"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        try {
+          const saved = localStorage.getItem("rakez_" + id);
+          if (saved) el.value = saved;
+        } catch (e) {}
+        el.addEventListener("input", () => {
+          try { localStorage.setItem("rakez_" + id, el.value.trim()); } catch (e) {}
+        });
+      }
+    });
     document.getElementById("editTitleSelect").addEventListener("change", renderComplianceAndCustomerUI);
     document.getElementById("editFirstNameInput").addEventListener("input", renderComplianceAndCustomerUI);
     document.getElementById("editPhoneInput").addEventListener("input", renderComplianceAndCustomerUI);
