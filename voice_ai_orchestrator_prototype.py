@@ -1,32 +1,30 @@
 #!/usr/bin/env python3
 """
-Enterprise Voice AI & Omnichannel Orchestrator Prototype
-========================================================
+RAKEZ Autonomous Voice AI Caller & Portal 360 Orchestrator Prototype
+====================================================================
 A modular, pluggable reference implementation sitting on top of existing
-enterprise systems (Genesys Telephony, Personal Phone / Cloud SIP via Twilio for
-Rapid Prototyping, CRM, and Microsoft Outlook/Graph).
+RAKEZ enterprise systems (Genesys Telephony / Personal Caller ID, Portal 360 CRM,
+and Microsoft Outlook/Graph).
 
-Features demonstrated:
-1. Hexagonal / Adapter Pattern (`BaseCRMAdapter`, `BaseTelephonyAdapter`, `BaseEmailAdapter`)
-   so you can swap between a Personal Number Prototype (`PersonalPhoneTwilioAdapter`) and
-   Enterprise Genesys (`GenesysCloudAdapter`) with a 1-line configuration change.
-2. UAE Regulatory Compliance Middleware (`UAEComplianceGuard`) implementing:
-   - TDRA Cabinet Resolution No. 56 of 2024 calling window checks (09:00 - 18:00 Asia/Dubai)
-   - Personal SIM vs. Corporate Registered Number check (allows personal SIMs ONLY in
-     `SANDBOX_PROTOTYPE` mode to test with whitelisted internal numbers, blocking commercial
-     telemarketing from personal numbers per Article 6 of Cabinet Resolution No. 56 of 2024)
-   - Do Not Call Register (DNCR) & internal opt-out verification
-   - Call attempt frequency limits (max 1/day, 2/week for unanswered calls)
-   - UAE PDPL (Federal Decree-Law No. 45 of 2021) PII masking for logs
-3. LLM Function-Calling / Tool Router (`OmnichannelAgentOrchestrator`) handling:
-   - Personalized offer retrieval (`get_best_offers`)
-   - Service request & complaint registration (`create_crm_ticket`)
-   - Customer feedback / CSAT logging (`log_customer_feedback`)
-   - Warm transfer to a human agent (`transfer_to_human_agent`) — bridges to a second
-     personal/colleague mobile number in prototype mode or a Genesys queue in production!
-   - Immediate DNC opt-out (`register_dnc_opt_out`)
-4. Phase 2 Readiness: Same orchestrator processes inbound Outlook emails via a unified
-   `InteractionTurn` contract.
+Key Capabilities Implemented:
+1. Personal Human Addressing:
+   - Always addresses the customer by their actual personal name (`first_name` / `full_name`,
+     e.g., "Tariq"), never by their corporate LLC name (`company_name`).
+2. Conversational Improvisation & Fuzzy Brief-Phrase Offer Matching:
+   - Understands brief 1-2 word replies from the customer (e.g., "the 3-year one",
+     "warehouse", "15% off") via `match_brief_offer_mention()`, explains the matched offer,
+     and asks for confirmation (`pending_offer_confirmation`) before logging the Portal 360 SR.
+3. Autonomous Call Resolution & Strict 3-Rule Relationship Officer Escalation:
+   - Replaces the human caller for standard renewals, offers, FAQs, and routine service tickets.
+   - ONLY transfers to a human Relationship Officer when one of 3 modifiable backend rules triggers:
+     * Rule 1 (Customer Request): Customer explicitly asks for a Relationship Officer / human.
+     * Rule 2 (High Dissatisfaction): Customer is strongly dissatisfied / refuses to listen.
+     * Rule 3 (System-Mandated Policy): High-risk scenario (e.g., Company Liquidation / Legal Freeze).
+4. Modifiable Backend Scenarios (`BACKEND_SCENARIOS_CONFIG`):
+   - Easily add or modify scenarios, offer keywords, and escalation triggers in one place.
+5. UAE Regulatory Compliance Middleware (`UAEComplianceGuard`):
+   - Enforces UAE Cabinet Resolution No. 56 of 2024 (09:00-18:00 GST window, DNCR scrubbing)
+     and UAE PDPL (Federal Decree-Law No. 45 of 2021) PII masking.
 """
 
 from __future__ import annotations
@@ -38,20 +36,116 @@ from datetime import datetime, time, timezone, timedelta
 import enum
 import json
 import logging
-import os
 import re
 import uuid
 from typing import Any, Dict, List, Optional
 
-# Configure structured logging with UAE PDPL PII-safe formatting
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)-7s | %(name)s | %(message)s",
 )
-logger = logging.getLogger("VoiceAIOrchestrator")
+logger = logging.getLogger("RAKEZVoiceAIOrchestrator")
 
-# UAE Standard Time (GST / Asia/Dubai is UTC+4)
 UAE_TZ = timezone(timedelta(hours=4))
+
+
+# ============================================================================
+# 0. MODIFIABLE BACKEND SCENARIOS & RELATIONSHIP OFFICER ESCALATION RULES
+# ============================================================================
+
+RM_ESCALATION_RULES: Dict[str, List[str]] = {
+    # Rule 1: Customer explicitly asks to speak with a human officer
+    "explicit_officer_request_keywords": [
+        "relationship manager",
+        "relationship officer",
+        "transfer me",
+        "speak to a human",
+        "real person",
+        "human agent",
+        "supervisor",
+        "connect me to an officer",
+    ],
+    # Rule 2: Customer is strongly dissatisfied and not ready to listen
+    "severe_dissatisfaction_keywords": [
+        "frustrated",
+        "fed up",
+        "unacceptable",
+        "ridiculous",
+        "terrible",
+        "waste of time",
+        "not listening",
+        "don't want to listen",
+        "angry",
+        "furious",
+        "1 out of 5",
+        "worst service",
+    ],
+    # Rule 3: System-mandated policy scenarios requiring a Relationship Officer
+    "system_mandated_intervention_keywords": [
+        "liquidate",
+        "liquidation",
+        "deregister",
+        "cancel license",
+        "shareholder dispute",
+        "court order",
+        "legal freeze",
+        "custom land plot",
+    ],
+}
+
+BACKEND_SCENARIOS_CONFIG: List[Dict[str, Any]] = [
+    {
+        "id": "SCENARIO_VISA_DELAY",
+        "name": "Routine Visa / ICP Delay (AI Resolves Autonomously)",
+        "trigger_keywords": ["visa", "stuck", "delayed", "delay", "icp", "medical", "emirates id"],
+        "requires_rm_transfer": False,
+        "auto_ticket_type": "COMPLAINT",
+        "auto_ticket_priority": "HIGH",
+        "response_template": (
+            "I completely understand how stressful a visa delay can be, {first_name}. "
+            "Let me take care of that for you right now—I've just raised a high-priority escalation "
+            "ticket ({ticket_id}) with our Government Services team to expedite your application with ICP, "
+            "and they'll update your Portal 360 status today. While I have you on the line, is there "
+            "anything else on your renewal I can help sort out?"
+        ),
+    },
+    {
+        "id": "SCENARIO_UBO_DOCS",
+        "name": "Licensing & UBO Document Checklist Inquiry",
+        "trigger_keywords": ["document", "documents", "ubo", "checklist", "paperwork", "needed", "require"],
+        "requires_rm_transfer": False,
+        "auto_ticket_type": None,
+        "response_template": (
+            "Sure thing, {first_name}. For your renewal on Portal 360, all you need is your signed lease "
+            "agreement, valid passport and Emirates ID copies for the shareholders, and the quick UBO "
+            "declaration form. I can send that checklist straight to your email right now if you'd like!"
+        ),
+    },
+    {
+        "id": "SCENARIO_PRICING_INSTALLMENTS",
+        "name": "Flexible Payment & Installment Plan Inquiry",
+        "trigger_keywords": ["expensive", "cost", "price", "installment", "installments", "monthly", "payment plan"],
+        "requires_rm_transfer": False,
+        "auto_ticket_type": None,
+        "response_template": (
+            "That's a very fair question, {first_name}. In addition to the multi-year discount, we offer "
+            "flexible installment plans through Portal 360 using partner bank credit cards with zero interest, "
+            "or post-dated cheques. Would you like me to include the installment option on your renewal quote?"
+        ),
+    },
+    {
+        "id": "SCENARIO_LIQUIDATION_MANDATORY_RM",
+        "name": "System-Mandated RM Intervention: Company Liquidation / Legal Freeze",
+        "trigger_keywords": ["liquidate", "liquidation", "close company", "cancel license", "deregister", "shareholder dispute"],
+        "requires_rm_transfer": True,
+        "escalation_reason": "System-Mandated Policy: Company Liquidation / Legal Restructuring requires Relationship Officer authorization.",
+        "response_template": (
+            "I understand, {first_name}. Because company liquidation and license deregistration require formal "
+            "clearance and dedicated Relationship Officer sign-off under RAKEZ policy, I've logged pre-check "
+            "reference {ticket_id} and I'm connecting you directly with your Relationship Officer right now."
+        ),
+    },
+]
 
 
 # ============================================================================
@@ -80,10 +174,12 @@ class TicketPriority(str, enum.Enum):
 @dataclasses.dataclass
 class CustomerProfile:
     customer_id: str
-    full_name: str
+    first_name: str  # Personal first name used in conversation (e.g., "Tariq")
+    full_name: str   # Full human name (e.g., "Tariq Al-Mansoori")
+    company_name: str  # Secondary corporate entity metadata (never used as the human's name)
     phone_e164: str
     email: str
-    segment: str  # e.g., "Gold", "Platinum", "Standard"
+    segment: str
     preferred_language: str = "en-AE"
     dnc_opted_out: bool = False
     open_ticket_ids: List[str] = dataclasses.field(default_factory=list)
@@ -92,11 +188,14 @@ class CustomerProfile:
 @dataclasses.dataclass
 class PromotionalOffer:
     offer_id: str
+    short_label: str
     title: str
+    spoken_pitch: str
     description: str
     discount_pct: float
     valid_until: str
     eligibility_segment: str
+    shorthand_keywords: List[str] = dataclasses.field(default_factory=list)
 
 
 @dataclasses.dataclass
@@ -129,6 +228,7 @@ class InteractionSession:
     customer: CustomerProfile
     channel: ChannelType
     recording_consent_given: bool = False
+    pending_offer_confirmation: Optional[PromotionalOffer] = None
     transcript_history: List[Dict[str, str]] = dataclasses.field(default_factory=list)
     created_tickets: List[str] = dataclasses.field(default_factory=list)
     transferred_to_human: bool = False
@@ -144,61 +244,27 @@ class UAEComplianceGuard:
     and UAE Federal Decree-Law No. 45 of 2021 (Personal Data Protection Law - PDPL).
     """
 
-    # TDRA permitted outbound telemarketing window: 09:00 to 18:00 UAE local time
     ALLOWED_START_TIME = time(9, 0)
     ALLOWED_END_TIME = time(18, 0)
 
-    def __init__(
-        self,
-        national_dncr_numbers: Optional[set[str]] = None,
-        sandbox_prototype_mode: bool = False,
-        sandbox_whitelisted_numbers: Optional[set[str]] = None,
-    ) -> None:
+    def __init__(self, national_dncr_numbers: Optional[set[str]] = None) -> None:
         self.national_dncr_numbers = national_dncr_numbers or set()
         self.call_attempt_log: Dict[str, List[datetime]] = {}
-        self.sandbox_prototype_mode = sandbox_prototype_mode
-        self.sandbox_whitelisted_numbers = sandbox_whitelisted_numbers or set()
 
     def verify_outbound_call_eligibility(
         self,
         customer: CustomerProfile,
-        using_personal_caller_id: bool = False,
         is_promotional: bool = True,
         simulated_uae_time: Optional[datetime] = None,
     ) -> tuple[bool, str]:
-        """
-        Pre-dial check before initiating an outbound call.
-        Note on UAE Law (Cabinet Resolution No. 56 of 2024):
-          Using a personal mobile/fixed number for commercial telemarketing to the public
-          is strictly prohibited in the UAE (heavy fines and SIM disconnection apply).
-          However, for an internal engineering prototype, `sandbox_prototype_mode=True`
-          permits calling ONLY whitelisted test phone numbers (e.g., your own or a colleague's phone).
-        """
         now_uae = simulated_uae_time or datetime.now(UAE_TZ)
 
-        # 0. Personal Caller ID Guardrail (UAE Cabinet Resolution No. 56 of 2024)
-        if using_personal_caller_id:
-            if not self.sandbox_prototype_mode:
-                return (
-                    False,
-                    "Blocked by UAE TDRA Telemarketing Law (Cabinet Resolution No. 56 of 2024): "
-                    "Outbound commercial calls cannot use a personal phone number. Use a corporate registered number.",
-                )
-            if customer.phone_e164 not in self.sandbox_whitelisted_numbers:
-                return (
-                    False,
-                    f"Blocked by Sandbox Safety Guard: Personal Caller ID prototype can only dial whitelisted "
-                    f"internal test numbers, not {self.mask_pii(customer.phone_e164)}.",
-                )
-
-        # 1. Check customer internal opt-out & TDRA National DNCR
         if customer.dnc_opted_out or customer.phone_e164 in self.national_dncr_numbers:
             return (
                 False,
                 f"Blocked by UAE TDRA DNCR / Customer Opt-Out for {self.mask_pii(customer.phone_e164)}.",
             )
 
-        # 2. Check UAE calling hours (09:00 - 18:00 local time) for promotional/outbound outreach
         if is_promotional:
             current_t = now_uae.time()
             if not (self.ALLOWED_START_TIME <= current_t <= self.ALLOWED_END_TIME):
@@ -208,17 +274,13 @@ class UAEComplianceGuard:
                     f"is outside permitted 09:00-18:00 GST window.",
                 )
 
-        # 3. Check retry frequency limits (max 1 attempt/day, max 2/week if unanswered)
         attempts = self.call_attempt_log.get(customer.customer_id, [])
         one_day_ago = now_uae - timedelta(days=1)
         one_week_ago = now_uae - timedelta(days=7)
 
-        attempts_last_24h = [ts for ts in attempts if ts > one_day_ago]
-        attempts_last_7d = [ts for ts in attempts if ts > one_week_ago]
-
-        if len(attempts_last_24h) >= 1:
+        if len([ts for ts in attempts if ts > one_day_ago]) >= 1:
             return False, "Blocked by TDRA retry rule: Maximum 1 unanswered attempt per day reached."
-        if len(attempts_last_7d) >= 2:
+        if len([ts for ts in attempts if ts > one_week_ago]) >= 2:
             return False, "Blocked by TDRA retry rule: Maximum 2 unanswered attempts per week reached."
 
         return True, "Eligible for outbound call under UAE TDRA rules."
@@ -228,10 +290,6 @@ class UAEComplianceGuard:
 
     @staticmethod
     def mask_pii(text: str) -> str:
-        """
-        Redacts Emirates IDs, credit cards, email addresses, and phone numbers
-        before writing to telemetry logs (UAE PDPL compliance).
-        """
         text = re.sub(r"(\+971\d{2})\d{4}(\d{3})", r"\1****\2", text)
         text = re.sub(r"784-\d{4}-\d{7}-\d", "784-****-*******-*", text)
         text = re.sub(r"([a-zA-Z0-9_.+-])[a-zA-Z0-9_.+-]+(@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)", r"\1***\2", text)
@@ -243,8 +301,6 @@ class UAEComplianceGuard:
 # ============================================================================
 
 class BaseCRMAdapter(abc.ABC):
-    """Abstract interface for any underlying CRM (Salesforce, Dynamics 365, ServiceNow, Custom)."""
-
     @abc.abstractmethod
     async def get_customer(self, customer_id: str) -> Optional[CustomerProfile]:
         pass
@@ -282,12 +338,6 @@ class BaseCRMAdapter(abc.ABC):
 
 
 class BaseTelephonyAdapter(abc.ABC):
-    """
-    Abstract interface for Telephony.
-    Allows switching between `PersonalPhoneTwilioAdapter` (for immediate prototyping
-    without Genesys access) and `GenesysCloudAdapter` (for enterprise production).
-    """
-
     @abc.abstractmethod
     async def start_outbound_call(self, customer: CustomerProfile, campaign_id: str) -> str:
         pass
@@ -303,8 +353,6 @@ class BaseTelephonyAdapter(abc.ABC):
 
 
 class BaseEmailAdapter(abc.ABC):
-    """Abstract interface for Phase 2 Microsoft Outlook / Graph API integration."""
-
     @abc.abstractmethod
     async def send_email_reply(
         self,
@@ -316,50 +364,68 @@ class BaseEmailAdapter(abc.ABC):
         pass
 
 
-# ----------------------------------------------------------------------------
-# Concrete Reference Adapters (Swap internals with aiohttp/httpx calls in prod)
-# ----------------------------------------------------------------------------
-
 class EnterpriseMockCRMAdapter(BaseCRMAdapter):
     """
-    Reference CRM Adapter simulating an enterprise backend (e.g., Dynamics 365 / Salesforce).
+    Reference RAKEZ Portal 360 CRM Adapter.
+    Stores personal human names (`first_name`, `full_name`) distinctly from `company_name`,
+    and includes `shorthand_keywords` on every offer for brief-word recognition.
     """
 
     def __init__(self) -> None:
         self.customers: Dict[str, CustomerProfile] = {
             "CUST-UAE-101": CustomerProfile(
                 customer_id="CUST-UAE-101",
+                first_name="Mr. Tariq",
                 full_name="Tariq Al-Mansoori",
+                company_name="Al-Mansoori Industrial LLC",
                 phone_e164="+971504439812",
-                email="tariq.mansoori@example.ae",
-                segment="Platinum",
+                email="tariq@almansoori-ind.ae",
+                segment="Al Hamra Industrial Zone",
                 preferred_language="en-AE",
-                open_ticket_ids=["SR-2026-1004"],
+                open_ticket_ids=["SR-360-8841"],
             )
         }
         self.offers: List[PromotionalOffer] = [
             PromotionalOffer(
-                offer_id="OFFER-PLAT-5G-UPGRADE",
-                title="Platinum Annual Fiber & Roaming Bundle",
-                description="25% off for 12 months plus complimentary GCC & global data roaming (20GB/mo).",
-                discount_pct=25.0,
+                offer_id="RAKEZ-3YR-RENEW-15",
+                short_label="3-Year License Renewal Package",
+                title="3-Year Multi-Year License Renewal Package",
+                spoken_pitch=(
+                    "our 3-Year License Renewal package, which gives you 15 percent off your "
+                    "annual trade license fees plus 2 complimentary employee visa quotas"
+                ),
+                description="15% discount on RAKEZ trade license fees + 2 complimentary employee visa quotas.",
+                discount_pct=15.0,
                 valid_until="2026-12-31",
-                eligibility_segment="Platinum",
+                eligibility_segment="Al Hamra Industrial Zone",
+                shorthand_keywords=[
+                    "3-year", "3 year", "three year", "15%", "15 percent", "fifteen",
+                    "renewal", "license", "first", "multi-year", "visa quota",
+                ],
             ),
             PromotionalOffer(
-                offer_id="OFFER-LOYALTY-CASHBACK",
-                title="AED 300 Bill Credit on Auto-Pay Enrollment",
-                description="Instant AED 300 credit on your next statement when activating recurring auto-pay.",
-                discount_pct=15.0,
+                offer_id="RAKEZ-WAREHOUSE-FITOUT",
+                short_label="Al Hamra Warehouse Expansion Offer",
+                title="Al Hamra Warehouse Expansion Grace Period",
+                spoken_pitch=(
+                    "our Al Hamra Warehouse Expansion offer, which includes a 3-month rent-free "
+                    "fit-out grace period and fast-track Civil Defense NOC"
+                ),
+                description="3 months rent-free fit-out grace period & fast-track Civil Defense NOC on adjacent bay lease.",
+                discount_pct=25.0,
                 valid_until="2026-11-30",
-                eligibility_segment="Platinum",
+                eligibility_segment="Al Hamra Industrial Zone",
+                shorthand_keywords=[
+                    "warehouse", "al hamra", "fit-out", "fit out", "rent-free",
+                    "rent free", "3 months", "expansion", "bay", "second", "space",
+                ],
             ),
         ]
         self.tickets: Dict[str, CRMTicket] = {}
         self.feedbacks: List[CustomerFeedback] = []
 
     async def get_customer(self, customer_id: str) -> Optional[CustomerProfile]:
-        await asyncio.sleep(0.02)
+        await asyncio.sleep(0.01)
         return self.customers.get(customer_id)
 
     async def get_eligible_offers(self, customer_id: str) -> List[PromotionalOffer]:
@@ -377,8 +443,8 @@ class EnterpriseMockCRMAdapter(BaseCRMAdapter):
         details: str,
         channel: ChannelType,
     ) -> CRMTicket:
-        prefix = "CMP" if ticket_type == TicketType.COMPLAINT else "SR"
-        ticket_id = f"{prefix}-2026-{uuid.uuid4().hex[:4].upper()}"
+        prefix = "CMP-360" if ticket_type == TicketType.COMPLAINT else "SR-360"
+        ticket_id = f"{prefix}-{uuid.uuid4().hex[:4].upper()}"
         ticket = CRMTicket(
             ticket_id=ticket_id,
             customer_id=customer_id,
@@ -393,7 +459,7 @@ class EnterpriseMockCRMAdapter(BaseCRMAdapter):
         if customer_id in self.customers:
             self.customers[customer_id].open_ticket_ids.append(ticket_id)
         logger.info(
-            "CRM Ticket Created: id=%s type=%s priority=%s summary='%s'",
+            "Portal 360 Ticket Created: id=%s type=%s priority=%s summary='%s'",
             ticket.ticket_id,
             ticket.ticket_type.value,
             ticket.priority.value,
@@ -410,7 +476,7 @@ class EnterpriseMockCRMAdapter(BaseCRMAdapter):
         channel: ChannelType,
     ) -> CustomerFeedback:
         fb = CustomerFeedback(
-            feedback_id=f"FB-{uuid.uuid4().hex[:6].upper()}",
+            feedback_id=f"CSAT-{uuid.uuid4().hex[:4].upper()}",
             customer_id=customer_id,
             rating_1_to_5=rating_1_to_5,
             sentiment=sentiment,
@@ -420,7 +486,7 @@ class EnterpriseMockCRMAdapter(BaseCRMAdapter):
         )
         self.feedbacks.append(fb)
         logger.info(
-            "CRM Feedback Logged: id=%s rating=%d/5 sentiment=%s",
+            "Portal 360 Feedback Logged: id=%s rating=%d/5 sentiment=%s",
             fb.feedback_id,
             fb.rating_1_to_5,
             fb.sentiment,
@@ -430,116 +496,19 @@ class EnterpriseMockCRMAdapter(BaseCRMAdapter):
     async def mark_customer_opt_out(self, customer_id: str) -> bool:
         if customer_id in self.customers:
             self.customers[customer_id].dnc_opted_out = True
-            logger.info("CRM DNC Flag Updated for customer_id=%s", customer_id)
+            logger.info("Portal 360 DNC Flag Updated for customer_id=%s", customer_id)
             return True
         return False
 
 
-class PersonalPhoneTwilioAdapter(BaseTelephonyAdapter):
-    """
-    Prototype Telephony Adapter that lets you make calls using your personal UAE number
-    (as a Verified Outgoing Caller ID on Twilio Programmable Voice) or an Android ADB/GSM bridge,
-    without needing Genesys access during prototyping.
-
-    How it works in live prototype mode:
-    1. Verify your personal mobile number in the Twilio Console (Outgoing Caller IDs) via OTP.
-    2. Set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `PERSONAL_VERIFIED_CALLER_ID`, and
-       `PUBLIC_WEBSOCKET_URL` (e.g., an ngrok tunnel to your local FastAPI/Pipecat server).
-    3. `start_outbound_call` triggers Twilio REST API with TwiML `<Connect><Stream url="wss://..."/>`
-       so bidirectional audio streams to your local Python Voice AI agent!
-    4. `warm_transfer_to_queue` updates the live call with TwiML `<Dial>+97150xxxxxxx</Dial>` to
-       bridge the call to a colleague's mobile phone while sending them the AI Screen-Pop via SMS/Console.
-    """
-
-    def __init__(
-        self,
-        personal_caller_id_e164: str = "+971501112233",
-        human_agent_fallback_phone_e164: str = "+971509998877",
-        websocket_stream_url: str = "wss://your-tunnel.ngrok.app/ws/twilio-media-stream",
-    ) -> None:
-        self.personal_caller_id = personal_caller_id_e164
-        self.human_agent_phone = human_agent_fallback_phone_e164
-        self.websocket_stream_url = websocket_stream_url
-        self.account_sid = os.getenv("TWILIO_ACCOUNT_SID")
-        self.auth_token = os.getenv("TWILIO_AUTH_TOKEN")
-
-    def generate_media_stream_twiml(self, customer_id: str, campaign_id: str) -> str:
-        """
-        Generates the TwiML payload instructing Twilio to stream real-time bidirectional
-        8kHz mu-law audio over WebSockets to your Python AI Voice Pipeline.
-        """
-        return (
-            '<?xml version="1.0" encoding="UTF-8"?>'
-            "<Response>"
-            "<Connect>"
-            f'<Stream url="{self.websocket_stream_url}">'
-            f'<Parameter name="customer_id" value="{customer_id}" />'
-            f'<Parameter name="campaign_id" value="{campaign_id}" />'
-            "</Stream>"
-            "</Connect>"
-            "</Response>"
-        )
-
-    def generate_warm_transfer_twiml(self, ai_whisper_summary: str) -> str:
-        """
-        Generates TwiML to bridge the active call to a human agent's mobile phone (`<Dial>`).
-        """
-        return (
-            '<?xml version="1.0" encoding="UTF-8"?>'
-            "<Response>"
-            "<Say voice=\"Polly.Joanna-Neural\">Please hold while I connect you to a specialist.</Say>"
-            f"<Dial callerId=\"{self.personal_caller_id}\">{self.human_agent_phone}</Dial>"
-            "</Response>"
-        )
-
-    async def start_outbound_call(self, customer: CustomerProfile, campaign_id: str) -> str:
-        call_sid = f"TWILIO-PROTOTYPE-CA{uuid.uuid4().hex[:8].upper()}"
-        twiml = self.generate_media_stream_twiml(customer.customer_id, campaign_id)
-        logger.info(
-            "Personal-Number Prototype Call Initiated: sid=%s from=%s to=%s stream_twiml=%s",
-            call_sid,
-            UAEComplianceGuard.mask_pii(self.personal_caller_id),
-            UAEComplianceGuard.mask_pii(customer.phone_e164),
-            twiml,
-        )
-        return call_sid
-
-    async def warm_transfer_to_queue(
-        self,
-        call_id: str,
-        target_queue_name: str,
-        screen_pop_attributes: Dict[str, Any],
-    ) -> Dict[str, Any]:
-        transfer_twiml = self.generate_warm_transfer_twiml(screen_pop_attributes.get("ai_summary", ""))
-        logger.info(
-            "Personal-Number Prototype Warm Transfer: call_sid=%s bridging to human phone=%s (Queue='%s') | ScreenPop=%s",
-            call_id,
-            UAEComplianceGuard.mask_pii(self.human_agent_phone),
-            target_queue_name,
-            json.dumps(screen_pop_attributes),
-        )
-        return {
-            "status": "TRANSFERRED_VIA_PERSONAL_BRIDGE",
-            "call_id": call_id,
-            "target_queue": target_queue_name,
-            "bridged_to_phone": UAEComplianceGuard.mask_pii(self.human_agent_phone),
-            "transfer_twiml": transfer_twiml,
-            "screen_pop_sent": True,
-        }
-
-
 class GenesysCloudAdapter(BaseTelephonyAdapter):
-    """
-    Production Adapter for Genesys Cloud CX Platform API & Audio Connector.
-    """
-
     async def start_outbound_call(self, customer: CustomerProfile, campaign_id: str) -> str:
-        call_id = f"GENESYS-CALL-{uuid.uuid4().hex[:8].upper()}"
+        call_id = f"RAKEZ-CALL-{uuid.uuid4().hex[:6].upper()}"
         logger.info(
-            "Genesys Outbound Call Initiated: call_id=%s phone=%s campaign=%s",
+            "Outbound Call Initiated: call_id=%s customer='%s' phone=%s",
             call_id,
+            customer.full_name,
             UAEComplianceGuard.mask_pii(customer.phone_e164),
-            campaign_id,
         )
         return call_id
 
@@ -550,13 +519,13 @@ class GenesysCloudAdapter(BaseTelephonyAdapter):
         screen_pop_attributes: Dict[str, Any],
     ) -> Dict[str, Any]:
         logger.info(
-            "Genesys Warm Transfer Triggered: call_id=%s -> queue='%s' with ScreenPop=%s",
+            "Relationship Officer Warm Transfer Triggered: call_id=%s -> queue='%s' ScreenPop=%s",
             call_id,
             target_queue_name,
             json.dumps(screen_pop_attributes),
         )
         return {
-            "status": "TRANSFERRED",
+            "status": "TRANSFERRED_TO_RELATIONSHIP_OFFICER",
             "call_id": call_id,
             "target_queue": target_queue_name,
             "genesys_participant_attributes_attached": True,
@@ -564,10 +533,6 @@ class GenesysCloudAdapter(BaseTelephonyAdapter):
 
 
 class OutlookGraphEmailAdapter(BaseEmailAdapter):
-    """
-    Phase 2 Adapter for Microsoft Graph API (`POST /users/{mailbox}/sendMail`).
-    """
-
     async def send_email_reply(
         self,
         recipient_email: str,
@@ -575,7 +540,7 @@ class OutlookGraphEmailAdapter(BaseEmailAdapter):
         body_text: str,
         reference_ticket_id: Optional[str] = None,
     ) -> Dict[str, Any]:
-        msg_id = f"GRAPH-MSG-{uuid.uuid4().hex[:8].upper()}"
+        msg_id = f"GRAPH-MSG-{uuid.uuid4().hex[:6].upper()}"
         logger.info(
             "Outlook Graph Email Sent: id=%s to=%s subject='%s' ticket_ref=%s",
             msg_id,
@@ -587,107 +552,16 @@ class OutlookGraphEmailAdapter(BaseEmailAdapter):
 
 
 # ============================================================================
-# 4. CORE AI AGENT ORCHESTRATOR ("THE BRAIN") & LLM TOOL DEFINITIONS
+# 4. AUTONOMOUS AI CALLER ORCHESTRATOR (Fuzzy Offer Match & Strict RM Policy)
 # ============================================================================
-
-AGENT_TOOLS_SCHEMA: List[Dict[str, Any]] = [
-    {
-        "type": "function",
-        "function": {
-            "name": "get_best_offers",
-            "description": "Fetch personalized promotional offers and loyalty upgrades for the customer from the CRM.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "customer_id": {"type": "string", "description": "Unique CRM customer ID"}
-                },
-                "required": ["customer_id"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "create_crm_ticket",
-            "description": "Log a service request, technical issue, or formal complaint in the backend CRM and return the ticket reference number.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "customer_id": {"type": "string"},
-                    "ticket_type": {
-                        "type": "string",
-                        "enum": ["SERVICE_REQUEST", "COMPLAINT", "INQUIRY"],
-                    },
-                    "priority": {
-                        "type": "string",
-                        "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
-                    },
-                    "summary": {"type": "string", "description": "Short 1-line title of the issue or request"},
-                    "details": {"type": "string", "description": "Detailed context captured from the customer"},
-                },
-                "required": ["customer_id", "ticket_type", "priority", "summary", "details"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "log_customer_feedback",
-            "description": "Save structured customer feedback and satisfaction rating (1-5) into the CRM.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "customer_id": {"type": "string"},
-                    "rating_1_to_5": {"type": "integer", "minimum": 1, "maximum": 5},
-                    "sentiment": {"type": "string", "enum": ["POSITIVE", "NEUTRAL", "NEGATIVE"]},
-                    "verbatim_comment": {"type": "string"},
-                },
-                "required": ["customer_id", "rating_1_to_5", "sentiment", "verbatim_comment"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "transfer_to_human_agent",
-            "description": "Warm-transfer the active call to a human specialist with a full context summary and ticket IDs.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "target_queue": {
-                        "type": "string",
-                        "enum": ["Retention_Specialists", "Complaints_Escalation_Desk", "General_Support"],
-                    },
-                    "escalation_reason": {"type": "string"},
-                    "conversation_summary": {"type": "string"},
-                },
-                "required": ["target_queue", "escalation_reason", "conversation_summary"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "register_dnc_opt_out",
-            "description": "Immediately add the customer to the Do Not Call (DNC) list if they ask not to receive future calls (UAE TDRA compliance).",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "customer_id": {"type": "string"},
-                },
-                "required": ["customer_id"],
-            },
-        },
-    },
-]
-
 
 class OmnichannelAgentOrchestrator:
     """
-    Channel-agnostic AI Orchestrator.
-    Works identically whether the voice call comes from your Personal Number Prototype
-    (`PersonalPhoneTwilioAdapter`), Enterprise Genesys (`GenesysCloudAdapter`), or
-    Outlook Email (`OutlookGraphEmailAdapter`).
+    Autonomous AI Caller Orchestrator for RAKEZ.
+    - Addresses customers personally by `first_name` ("Tariq").
+    - Matches brief customer phrases ("the 3-year one") to eligible offers and asks for confirmation.
+    - Resolves standard inquiries and complaints autonomously.
+    - Only transfers to a human Relationship Officer under the 3 strict escalation rules.
     """
 
     def __init__(
@@ -704,75 +578,143 @@ class OmnichannelAgentOrchestrator:
 
     def build_system_prompt(self, session: InteractionSession) -> str:
         return (
-            f"You are Noura, an enterprise virtual assistant calling on behalf of the organization in the UAE.\n"
-            f"Customer Name: {session.customer.full_name} (ID: {session.customer.customer_id}, Tier: {session.customer.segment})\n"
-            f"Channel: {session.channel.value}\n"
+            f"You are Noura, a Senior Client Relations Executive calling from RAKEZ (Ras Al Khaimah Economic Zone).\n"
+            f"You are speaking with {session.customer.full_name}. Always address them naturally by their first name "
+            f"'{session.customer.first_name}'—NEVER call a human being by their company name ('{session.customer.company_name}').\n"
             "Core Rules:\n"
-            "1. UAE Compliance: Always confirm at the beginning of a voice call that the call is recorded and ask if it is a convenient time to speak.\n"
-            "2. Keep spoken responses concise (1-2 sentences per turn) so the voice conversation feels natural and low-latency.\n"
-            "3. Use `get_best_offers` when presenting offers, `create_crm_ticket` for service requests or complaints, and `log_customer_feedback` for ratings.\n"
-            "4. If the customer is upset, requests a supervisor, or has a complex dispute, log the complaint ticket first and then invoke `transfer_to_human_agent`.\n"
-            "5. If the customer asks to stop receiving calls, immediately call `register_dnc_opt_out` and politely end the call."
+            "1. Sound like a warm, natural human caller—improvise smoothly and keep turns under 2 short sentences.\n"
+            "2. If the customer mentions an offer briefly (e.g., 'the 3-year one' or 'warehouse'), confirm the exact "
+            "offer name with them before logging the Portal 360 Service Request.\n"
+            "3. Handle offers, questions, and routine visa/licensing complaints yourself. ONLY transfer to a Relationship "
+            "Officer if: (a) the customer explicitly asks for an officer, (b) the customer is furious and refuses to listen, "
+            "or (c) the system demands officer intervention (e.g., company liquidation / legal freeze)."
         )
 
-    async def execute_tool_call(
-        self,
-        session: InteractionSession,
-        tool_name: str,
-        arguments: Dict[str, Any],
-    ) -> Dict[str, Any]:
-        """
-        Routes LLM function calls to the pluggable backend adapters.
-        """
-        if tool_name == "get_best_offers":
-            offers = await self.crm.get_eligible_offers(session.customer.customer_id)
-            return {"offers": [dataclasses.asdict(o) for o in offers]}
+    @staticmethod
+    def match_brief_offer_mention(
+        utterance: str, offers: List[PromotionalOffer]
+    ) -> Optional[PromotionalOffer]:
+        lower = utterance.lower()
+        for offer in offers:
+            for kw in offer.shorthand_keywords:
+                if kw.lower() in lower:
+                    return offer
+        return None
 
-        elif tool_name == "create_crm_ticket":
+    @staticmethod
+    def evaluate_rm_escalation_trigger(utterance: str) -> Optional[tuple[str, str]]:
+        """
+        Checks if any of the 3 strict Relationship Officer transfer rules are triggered.
+        Returns (rule_name, escalation_reason) or None if AI should handle autonomously.
+        """
+        lower = utterance.lower()
+        for kw in RM_ESCALATION_RULES["explicit_officer_request_keywords"]:
+            if kw in lower:
+                return ("RULE_1_CUSTOMER_REQUESTED_OFFICER", f"Customer explicitly requested Relationship Officer ('{kw}').")
+        for kw in RM_ESCALATION_RULES["severe_dissatisfaction_keywords"]:
+            if kw in lower:
+                return ("RULE_2_SEVERE_DISSATISFACTION", f"Customer expressed severe dissatisfaction/refusal ('{kw}').")
+        for kw in RM_ESCALATION_RULES["system_mandated_intervention_keywords"]:
+            if kw in lower:
+                return ("RULE_3_SYSTEM_MANDATED_POLICY", f"System-mandated Relationship Officer policy triggered ('{kw}').")
+        return None
+
+    async def handle_customer_turn(
+        self, session: InteractionSession, utterance: str
+    ) -> str:
+        """
+        Processes a live customer turn with brief-phrase offer matching, confirmation memory,
+        modifiable scenario resolution, and strict 3-rule Relationship Officer transfer gating.
+        """
+        lower = utterance.lower()
+        first_name = session.customer.first_name
+        offers = await self.crm.get_eligible_offers(session.customer.customer_id)
+
+        # 1. Check strict 3-rule Relationship Officer escalation triggers
+        escalation = self.evaluate_rm_escalation_trigger(utterance)
+        if escalation:
+            rule_code, reason = escalation
             ticket = await self.crm.create_ticket(
                 customer_id=session.customer.customer_id,
-                ticket_type=TicketType(arguments["ticket_type"]),
-                priority=TicketPriority(arguments["priority"]),
-                summary=arguments["summary"],
-                details=arguments["details"],
+                ticket_type=TicketType.COMPLAINT if "DISSATISFACTION" in rule_code else TicketType.SERVICE_REQUEST,
+                priority=TicketPriority.CRITICAL if "DISSATISFACTION" in rule_code else TicketPriority.HIGH,
+                summary=f"RM Escalation ({rule_code}): {utterance[:48]}",
+                details=reason,
                 channel=session.channel,
             )
             session.created_tickets.append(ticket.ticket_id)
-            return dataclasses.asdict(ticket)
-
-        elif tool_name == "log_customer_feedback":
-            fb = await self.crm.save_feedback(
-                customer_id=session.customer.customer_id,
-                rating_1_to_5=int(arguments["rating_1_to_5"]),
-                sentiment=arguments["sentiment"],
-                verbatim_comment=arguments["verbatim_comment"],
-                channel=session.channel,
-            )
-            return dataclasses.asdict(fb)
-
-        elif tool_name == "transfer_to_human_agent":
-            screen_pop_payload = {
-                "customer_id": session.customer.customer_id,
-                "customer_name": session.customer.full_name,
-                "segment": session.customer.segment,
-                "created_tickets": session.created_tickets,
-                "escalation_reason": arguments["escalation_reason"],
-                "ai_summary": arguments["conversation_summary"],
-            }
-            result = await self.telephony.warm_transfer_to_queue(
+            await self.telephony.warm_transfer_to_queue(
                 call_id=session.session_id,
-                target_queue_name=arguments["target_queue"],
-                screen_pop_attributes=screen_pop_payload,
+                target_queue_name="RAKEZ_Relationship_Officers",
+                screen_pop_attributes={
+                    "customer_name": session.customer.full_name,
+                    "first_name": first_name,
+                    "company_name": session.customer.company_name,
+                    "escalation_rule": rule_code,
+                    "escalation_reason": reason,
+                    "portal_360_tickets": session.created_tickets,
+                },
             )
             session.transferred_to_human = True
-            return result
+            return (
+                f"I completely understand, {first_name}. I've logged priority reference {ticket.ticket_id} "
+                f"and I'm connecting you straight through to your dedicated RAKEZ Relationship Officer right now "
+                f"with your full case file on their screen so you won't need to repeat a thing."
+            )
 
-        elif tool_name == "register_dnc_opt_out":
-            await self.crm.mark_customer_opt_out(session.customer.customer_id)
-            self.compliance.add_to_dnc(session.customer.phone_e164)
-            return {"status": "OPTED_OUT", "message": "Customer added to UAE DNC list."}
+        # 2. Check if customer is confirming a pending offer ("yes", "confirm", "lock that in")
+        if session.pending_offer_confirmation:
+            pending = session.pending_offer_confirmation
+            if any(w in lower for w in ["yes", "sure", "confirm", "lock", "go ahead", "apply", "do it"]):
+                sr = await self.crm.create_ticket(
+                    customer_id=session.customer.customer_id,
+                    ticket_type=TicketType.SERVICE_REQUEST,
+                    priority=TicketPriority.MEDIUM,
+                    summary=f"Confirmed Offer: {pending.title}",
+                    details=f"Customer {session.customer.full_name} verbally confirmed {pending.offer_id}.",
+                    channel=session.channel,
+                )
+                session.created_tickets.append(sr.ticket_id)
+                session.pending_offer_confirmation = None
+                return (
+                    f"Wonderful, {first_name}! I've just locked in the {pending.short_label} on your Portal 360 "
+                    f"profile under service request {sr.ticket_id}. While I have you on the line, is there "
+                    f"anything else I can take care of for you today?"
+                )
 
-        raise ValueError(f"Unknown tool invoked: {tool_name}")
+        # 3. Check if customer said a brief phrase referring to a specific offer ("the 3-year one", "warehouse")
+        matched_offer = self.match_brief_offer_mention(utterance, offers)
+        if matched_offer and "what offer" not in lower:
+            session.pending_offer_confirmation = matched_offer
+            return (
+                f"Got it, {first_name}—you're referring to {matched_offer.spoken_pitch}. "
+                f"Just to confirm before I log the request in Portal 360, would you like me to go ahead "
+                f"and lock in the {matched_offer.short_label} for you?"
+            )
+
+        # 4. Check modifiable backend scenarios (routine visa delay, UBO docs, installments) -> Resolved WITHOUT RM transfer
+        for scenario in BACKEND_SCENARIOS_CONFIG:
+            if not scenario["requires_rm_transfer"] and any(kw in lower for kw in scenario["trigger_keywords"]):
+                t_id = "N/A"
+                if scenario.get("auto_ticket_type"):
+                    t_obj = await self.crm.create_ticket(
+                        customer_id=session.customer.customer_id,
+                        ticket_type=TicketType(scenario["auto_ticket_type"]),
+                        priority=TicketPriority(scenario.get("auto_ticket_priority", "MEDIUM")),
+                        summary=f"{scenario['name']} ({session.customer.full_name})",
+                        details=utterance,
+                        channel=session.channel,
+                    )
+                    session.created_tickets.append(t_obj.ticket_id)
+                    t_id = t_obj.ticket_id
+                return scenario["response_template"].format(first_name=first_name, ticket_id=t_id)
+
+        # 5. Default offer overview pitch addressed personally to `first_name`
+        offer_pitches = " and ".join(o.spoken_pitch for o in offers)
+        return (
+            f"Gladly, {first_name}! Looking at your Portal 360 profile, you pre-qualify for {offer_pitches}. "
+            f"Which of those sounds like a better fit for your plans this year?"
+        )
 
 
 # ============================================================================
@@ -781,22 +723,13 @@ class OmnichannelAgentOrchestrator:
 
 async def run_end_to_end_prototype_simulation() -> None:
     print("=" * 84)
-    print("ENTERPRISE VOICE AI & OMNICHANNEL ORCHESTRATOR - PERSONAL NUMBER PROTOTYPE MODE")
+    print("RAKEZ AUTONOMOUS VOICE AI CALLER - IMPROVISATION & ESCALATION SIMULATION")
     print("=" * 84)
 
     crm = EnterpriseMockCRMAdapter()
-    # Using PersonalPhoneTwilioAdapter instead of GenesysCloudAdapter for rapid prototyping!
-    telephony = PersonalPhoneTwilioAdapter(
-        personal_caller_id_e164="+971501112233",
-        human_agent_fallback_phone_e164="+971509998877",
-    )
+    telephony = GenesysCloudAdapter()
     email_gateway = OutlookGraphEmailAdapter()
-
-    # Enable sandbox_prototype_mode with whitelisted test number (+971504439812)
-    compliance = UAEComplianceGuard(
-        sandbox_prototype_mode=True,
-        sandbox_whitelisted_numbers={"+971504439812"},
-    )
+    compliance = UAEComplianceGuard()
 
     orchestrator = OmnichannelAgentOrchestrator(
         crm_adapter=crm,
@@ -808,122 +741,117 @@ async def run_end_to_end_prototype_simulation() -> None:
     customer = await crm.get_customer("CUST-UAE-101")
     assert customer is not None
 
-    # ------------------------------------------------------------------------
-    # SCENARIO 1: UAE Compliance Check (Personal Caller ID Whitelist & Hours)
-    # ------------------------------------------------------------------------
-    print("\n--- [1] Testing UAE TDRA Compliance & Personal Caller ID Sandbox Guard ---")
-    valid_hours_time = datetime(2026, 10, 26, 11, 15, tzinfo=UAE_TZ)  # 11:15 AM GST
-    allowed, reason = compliance.verify_outbound_call_eligibility(
-        customer,
-        using_personal_caller_id=True,
-        is_promotional=True,
-        simulated_uae_time=valid_hours_time,
-    )
-    print(f"Whitelisted Test Number (+97150****812) -> Allowed={allowed} | {reason}")
-
-    # Test blocking a non-whitelisted real customer number when using a personal Caller ID
-    non_whitelisted_customer = dataclasses.replace(customer, phone_e164="+971528887766")
-    allowed_pub, reason_pub = compliance.verify_outbound_call_eligibility(
-        non_whitelisted_customer,
-        using_personal_caller_id=True,
-        is_promotional=True,
-        simulated_uae_time=valid_hours_time,
-    )
-    print(f"Unverified Public Number (+97152****766) -> Allowed={allowed_pub} | {reason_pub}")
-
-    # ------------------------------------------------------------------------
-    # SCENARIO 2: Outbound Call via Personal Caller ID Adapter (Feedback, Offer, Complaint & Transfer)
-    # ------------------------------------------------------------------------
-    print("\n--- [2] Simulating Outbound Voice Call via PersonalPhoneTwilioAdapter ---")
-    call_id = await telephony.start_outbound_call(customer, campaign_id="PROTOTYPE-DEMO-01")
+    call_id = await telephony.start_outbound_call(customer, campaign_id="RAKEZ-RENEWAL-Q4")
     session = InteractionSession(
         session_id=call_id,
         customer=customer,
-        channel=ChannelType.VOICE_PERSONAL_PROTOTYPE,
+        channel=ChannelType.VOICE_GENESYS,
     )
 
+    # Turn 1: Personal greeting using `customer.first_name` ("Tariq")
     greeting = (
-        f"Hello {customer.full_name}, this is Noura calling from Customer Care on a recorded line. "
-        "We're checking in on your recent experience and have a Platinum loyalty update for you. "
-        "Is now a convenient time to speak?"
+        f"Hi {customer.first_name}, good day! This is Noura calling from the Client Relations team "
+        f"at RAKEZ on a recorded line. How are you doing today? I was calling to check in on your "
+        f"experience and share two pre-approved renewal packages on your profile—do you have a quick minute?"
     )
-    print(f"\n[AI Agent]: {greeting}")
-    print("[Customer]: Yes, go ahead. Actually my home fiber speed has been dropping every evening, though your mobile service is great (4 out of 5).")
+    print(f"\n[Noura AI]: {greeting}")
 
-    fb_res = await orchestrator.execute_tool_call(
-        session,
-        "log_customer_feedback",
-        {
-            "customer_id": customer.customer_id,
-            "rating_1_to_5": 4,
-            "sentiment": "NEUTRAL",
-            "verbatim_comment": "Mobile service is great (4/5), but home fiber speed drops every evening.",
-        },
-    )
-    ticket_res = await orchestrator.execute_tool_call(
-        session,
-        "create_crm_ticket",
-        {
-            "customer_id": customer.customer_id,
-            "ticket_type": "COMPLAINT",
-            "priority": "HIGH",
-            "summary": "Recurring evening home fiber speed degradation",
-            "details": "Customer reported daily evening speed drops on home fiber connection during outbound check-in call.",
-        },
-    )
-    offers_res = await orchestrator.execute_tool_call(
-        session,
-        "get_best_offers",
-        {"customer_id": customer.customer_id},
-    )
-    top_offer = offers_res["offers"][0]
+    # Turn 2: Customer asks what offers they have
+    u1 = "Doing well Noura, thanks. What offers do you have for me?"
+    print(f"\n[{customer.full_name}]: {u1}")
+    r1 = await orchestrator.handle_customer_turn(session, u1)
+    print(f"[Noura AI]: {r1}")
 
-    ai_turn_2 = (
-        f"Thank you for that feedback—I've logged your 4-out-of-5 rating and immediately raised a high-priority "
-        f"technical complaint under reference {ticket_res['ticket_id']} for your evening fiber speeds. "
-        f"Also, as a Platinum member, you qualify for our {top_offer['title']} ({top_offer['description']}). "
-        "Would you like me to activate that offer or connect you with a specialist to check your fiber line right now?"
-    )
-    print(f"[AI Agent]: {ai_turn_2}")
-    print("[Customer]: Please apply the AED 300 auto-pay bill credit request, and then transfer me to a specialist to check my router now.")
+    # Turn 3: Customer replies with a brief 3-word phrase ("The 3-year one") -> AI matches & asks confirmation
+    u2 = "The 3-year one sounds good"
+    print(f"\n[{customer.full_name}]: {u2}")
+    r2 = await orchestrator.handle_customer_turn(session, u2)
+    print(f"[Noura AI]: {r2}")
 
-    sr_res = await orchestrator.execute_tool_call(
-        session,
-        "create_crm_ticket",
-        {
-            "customer_id": customer.customer_id,
-            "ticket_type": "SERVICE_REQUEST",
-            "priority": "MEDIUM",
-            "summary": "Enroll in Auto-Pay & apply AED 300 Platinum Loyalty Bill Credit",
-            "details": "Customer accepted OFFER-LOYALTY-CASHBACK during outbound call.",
-        },
-    )
-    transfer_res = await orchestrator.execute_tool_call(
-        session,
-        "transfer_to_human_agent",
-        {
-            "target_queue": "Complaints_Escalation_Desk",
-            "escalation_reason": "Customer requested live router diagnostics for evening fiber speed drops.",
-            "conversation_summary": (
-                f"Logged 4/5 feedback ({fb_res['feedback_id']}), raised fiber complaint {ticket_res['ticket_id']}, "
-                f"and logged service request {sr_res['ticket_id']} for AED 300 Auto-Pay credit."
-            ),
-        },
-    )
-    print(
-        f"[AI Agent]: I've registered your AED 300 bill credit request under {sr_res['ticket_id']}. "
-        f"I am bridging your call now to our specialist mobile line ({transfer_res['bridged_to_phone']}) "
-        f"with your full case summary attached."
-    )
+    # Turn 4: Customer confirms ("Yes, go ahead and confirm that") -> AI logs SR in Portal 360 autonomously
+    u3 = "Yes, go ahead and confirm that for me"
+    print(f"\n[{customer.full_name}]: {u3}")
+    r3 = await orchestrator.handle_customer_turn(session, u3)
+    print(f"[Noura AI]: {r3}")
+
+    # Turn 5: Customer mentions a routine visa delay -> AI logs ticket & resolves WITHOUT transferring to RM
+    u4 = "Also, one of my employee visas has been delayed in ICP review"
+    print(f"\n[{customer.full_name}]: {u4}")
+    r4 = await orchestrator.handle_customer_turn(session, u4)
+    print(f"[Noura AI]: {r4}")
+    print(f"  -> Transferred to Human RM? {session.transferred_to_human} (Handled 100% by AI Caller)")
+
+    # Turn 6: Special Case Trigger (Customer expresses severe dissatisfaction / asks for liquidation) -> RM Transfer!
+    u5 = "Actually I am really frustrated and fed up with this delay, I don't want to listen to anything!"
+    print(f"\n[{customer.full_name}]: {u5}")
+    r5 = await orchestrator.handle_customer_turn(session, u5)
+    print(f"[Noura AI]: {r5}")
+    print(f"  -> Transferred to Human RM? {session.transferred_to_human} (Triggered by Rule 2: Severe Dissatisfaction)")
 
     print("\n" + "=" * 84)
-    print("PROTOTYPE SIMULATION SUMMARY STATE IN CRM:")
-    print(f"  * Active Telephony Adapter : {type(telephony).__name__}")
-    print(f"  * Open CRM Tickets         : {customer.open_ticket_ids}")
-    print(f"  * Feedback Records Logged  : {len(crm.feedbacks)} (Rating: {crm.feedbacks[0].rating_1_to_5}/5)")
-    print(f"  * Human Transfer Bridged   : {session.transferred_to_human} (to {transfer_res['bridged_to_phone']})")
+    print(f"FINAL PORTAL 360 TICKETS FOR {customer.full_name}: {customer.open_ticket_ids}")
     print("=" * 84)
 
 
+# ============================================================================
+# 6. LIVE TWILIO PHONE DIALER & GMAIL INBOX CHECKER (Zero-Dependency CLI)
+# ============================================================================
+
+def dial_live_twilio_call(target_phone_e164: str, first_name: str = "Tariq") -> None:
+    """
+    Makes a REAL outbound phone call to `target_phone_e164` using Twilio's REST API
+    and your Verified Personal Caller ID (zero external pip packages required).
+    """
+    import base64
+    import os
+    import urllib.parse
+    import urllib.request
+
+    account_sid = os.getenv("TWILIO_ACCOUNT_SID", "").strip()
+    auth_token = os.getenv("TWILIO_AUTH_TOKEN", "").strip()
+    from_number = os.getenv("PERSONAL_VERIFIED_CALLER_ID", "").strip()
+
+    if not (account_sid and auth_token and from_number):
+        print("Error: Please set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and PERSONAL_VERIFIED_CALLER_ID.")
+        return
+
+    twiml = f"""<Response>
+        <Say voice="Polly.Joanna-Neural">
+            Hi {first_name}, good day! This is Noura calling from the Client Relations team at Rakez on a recorded line.
+            How are you doing today? I was calling to check in on your experience and share two pre-approved renewal packages
+            on your Portal 360 profile, including a 15 percent 3-year trade license renewal discount.
+        </Say>
+        <Pause length="1"/>
+        <Say voice="Polly.Joanna-Neural">
+            I have also sent the full renewal summary to your email. Have a wonderful day ahead!
+        </Say>
+    </Response>"""
+
+    url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Calls.json"
+    data = urllib.parse.urlencode({
+        "To": target_phone_e164,
+        "From": from_number,
+        "Twiml": twiml,
+    }).encode("utf-8")
+
+    creds = base64.b64encode(f"{account_sid}:{auth_token}".encode("utf-8")).decode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=data,
+        method="POST",
+        headers={
+            "Authorization": f"Basic {creds}",
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+    )
+    with urllib.request.urlopen(req) as resp:
+        res_json = json.loads(resp.read().decode("utf-8"))
+        print(f"SUCCESS! Ringing {target_phone_e164} right now (Call SID: {res_json.get('sid')})")
+
+
 if __name__ == "__main__":
-    asyncio.run(run_end_to_end_prototype_simulation())
+    import sys
+    if len(sys.argv) >= 3 and sys.argv[1] == "--dial":
+        dial_live_twilio_call(sys.argv[2], first_name=sys.argv[3] if len(sys.argv) >= 4 else "Tariq")
+    else:
+        asyncio.run(run_end_to_end_prototype_simulation())
