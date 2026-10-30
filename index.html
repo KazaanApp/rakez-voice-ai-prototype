@@ -86,7 +86,7 @@
             2. Backend Scenarios &amp; Rules
           </button>
           <button id="tabBtnEmail" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-600 hover:text-slate-900">
-            3. Phase 2: Outlook Email Hub
+            3. Phase 2: Gmail / Outlook Hub
           </button>
           <button id="tabBtnSetup" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-600 hover:text-slate-900">
             4. Live Mobile Test Guide
@@ -511,26 +511,31 @@
       <div class="lg:col-span-5 space-y-4">
         <div class="card-surface p-6 space-y-3.5">
           <div class="flex items-center justify-between">
-            <h2 class="text-base font-bold text-slate-900">Optional: Connect Live OpenAI API Key</h2>
-            <span class="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-purple-50 text-purple-700 border border-purple-200">
-              Studio Neural Voice + GPT-4o
+            <h2 class="text-base font-bold text-slate-900">Connect Live Google Gemini API Key (Free)</h2>
+            <span class="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-teal-50 text-teal-700 border border-teal-200">
+              Gemini 2.5 Flash + Native Audio
             </span>
           </div>
           <p class="text-xs text-slate-500 leading-relaxed">
-            The built-in improvisation engine works out of the box with zero keys. If you paste an OpenAI API key below, the browser will use <strong>GPT-4o</strong> for open-ended improvisation and <strong>OpenAI HD Neural TTS (`shimmer` / `nova`)</strong> for ultra-realistic human audio:
+            Paste a free <strong>Google Gemini API Key</strong> (from <a href="https://aistudio.google.com/apikey" target="_blank" class="text-teal-700 underline font-semibold">Google AI Studio</a>) below to power open-ended live improvisation with <strong>Gemini 2.5 Flash</strong> and expressive <strong>Gemini Native TTS Voices (`Aoede` / `Kore`)</strong>:
           </p>
           <div class="space-y-2.5 text-xs">
             <div>
-              <label for="openaiKeyInput" class="block text-slate-600 font-semibold mb-1">OpenAI API Key (Stored only in your browser memory)</label>
-              <input id="openaiKeyInput" type="password" placeholder="sk-proj-..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 font-mono text-xs" />
+              <label for="geminiKeyInput" class="block text-slate-700 font-bold mb-1">Google Gemini API Key (Recommended • Free Tier Available)</label>
+              <input id="geminiKeyInput" type="password" placeholder="AIzaSy..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 font-mono text-xs focus:border-teal-600 focus:outline-none" />
             </div>
             <div>
-              <label for="neuralVoiceModelSelect" class="block text-slate-600 font-semibold mb-1">Neural HD Voice Persona (when API key is provided)</label>
+              <label for="neuralVoiceModelSelect" class="block text-slate-600 font-semibold mb-1">Gemini Expressive Voice Persona</label>
               <select id="neuralVoiceModelSelect" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 text-xs">
-                <option value="shimmer">Shimmer (Warm, Expressive Female Executive)</option>
-                <option value="nova">Nova (Bright, Conversational Female)</option>
-                <option value="alloy">Alloy (Balanced Professional)</option>
+                <option value="Aoede">Aoede (Warm, Natural Female Executive — Gemini TTS)</option>
+                <option value="Kore">Kore (Clear, Empathetic Female — Gemini TTS)</option>
+                <option value="Puck">Puck (Upbeat Conversational — Gemini TTS)</option>
+                <option value="shimmer">Shimmer (If using OpenAI Key below)</option>
               </select>
+            </div>
+            <div class="pt-1 border-t border-slate-100">
+              <label for="openaiKeyInput" class="block text-slate-400 font-medium mb-1">Optional Alternative: OpenAI API Key (`sk-...`)</label>
+              <input id="openaiKeyInput" type="password" placeholder="sk-proj-... (optional fallback)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-slate-700 font-mono text-xs" />
             </div>
           </div>
         </div>
@@ -554,7 +559,7 @@
       <div class="lg:col-span-6 card-surface p-6 space-y-4">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-base font-bold text-slate-900">Phase 2: Inbound Outlook Email Automation</h2>
+            <h2 class="text-base font-bold text-slate-900">Phase 2: Inbound Gmail &amp; Outlook Email Automation</h2>
             <p class="text-xs text-slate-500">Reads investor emails via Microsoft Graph API and links them to prior voice calls in Portal 360.</p>
           </div>
           <span class="px-2.5 py-1 text-[11px] font-semibold rounded-full bg-sky-50 text-sky-700 border border-sky-200">Microsoft Graph API</span>
@@ -895,8 +900,67 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
       }
 
       const spokenText = formatForHumanSpeech(rawText);
+      const geminiKey = (document.getElementById("geminiKeyInput")?.value || "").trim();
       const openaiKey = (document.getElementById("openaiKeyInput")?.value || "").trim();
-      const voicePersona = document.getElementById("neuralVoiceModelSelect")?.value || "shimmer";
+      const voicePersona = document.getElementById("neuralVoiceModelSelect")?.value || "Aoede";
+
+      // 0. If user provided a Google Gemini API key, try Gemini 2.5 Flash Native TTS Audio first!
+      if (geminiKey.startsWith("AIza")) {
+        try {
+          const geminiVoice = ["Aoede", "Kore", "Puck", "Charon", "Fenrir"].includes(voicePersona) ? voicePersona : "Aoede";
+          const ttsResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${encodeURIComponent(geminiKey)}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: `Speak in a warm, natural, conversational human phone voice: ${spokenText}` }] }],
+              generationConfig: {
+                responseModalities: ["AUDIO"],
+                speechConfig: {
+                  voiceConfig: { prebuiltVoiceConfig: { voiceName: geminiVoice } }
+                }
+              }
+            })
+          });
+          if (ttsResp.ok) {
+            const ttsData = await ttsResp.json();
+            const b64Audio = ttsData?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+            if (b64Audio) {
+              const binaryStr = atob(b64Audio);
+              const pcmBytes = new Uint8Array(binaryStr.length);
+              for (let i = 0; i < binaryStr.length; i++) pcmBytes[i] = binaryStr.charCodeAt(i);
+              // Wrap 24kHz 16-bit mono PCM in a standard 44-byte WAV header
+              const wavBuffer = new ArrayBuffer(44 + pcmBytes.length);
+              const view = new DataView(wavBuffer);
+              const writeStr = (offset, str) => { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); };
+              writeStr(0, "RIFF");
+              view.setUint32(4, 36 + pcmBytes.length, true);
+              writeStr(8, "WAVE");
+              writeStr(12, "fmt ");
+              view.setUint32(16, 16, true);
+              view.setUint16(20, 1, true); // PCM
+              view.setUint16(22, 1, true); // Mono
+              view.setUint32(24, 24000, true); // 24kHz
+              view.setUint32(28, 48000, true); // Byte rate
+              view.setUint16(32, 2, true); // Block align
+              view.setUint16(34, 16, true); // 16-bit
+              writeStr(36, "data");
+              view.setUint32(40, pcmBytes.length, true);
+              new Uint8Array(wavBuffer, 44).set(pcmBytes);
+              const wavBlob = new Blob([wavBuffer], { type: "audio/wav" });
+              const url = URL.createObjectURL(wavBlob);
+              const audio = new Audio(url);
+              audio.onended = () => {
+                URL.revokeObjectURL(url);
+                maybeAutoStartMic();
+              };
+              await audio.play();
+              return;
+            }
+          }
+        } catch (err) {
+          // Fall back cleanly to browser Natural voice
+        }
+      }
 
       // 1. If user provided an OpenAI API key, use real OpenAI Neural HD Audio!
       if (openaiKey.startsWith("sk-")) {
@@ -1655,8 +1719,50 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
       }
 
       // =======================================================================
-      // STEP 7: OPTIONAL LIVE OPENAI GPT-4o IMPROVISATION (If API Key Provided)
+      // STEP 7: OPTIONAL LIVE GOOGLE GEMINI 2.5 FLASH / OPENAI IMPROVISATION
       // =======================================================================
+      const geminiKey = (document.getElementById("geminiKeyInput")?.value || "").trim();
+      if (geminiKey.startsWith("AIza")) {
+        try {
+          updateDialogueStateUI("Improvising via Live Google Gemini 2.5 Flash...");
+          const sysPrompt = `You are Noura, a warm, human-like Senior Client Relations Executive calling from RAKEZ (Ras Al Khaimah Economic Zone) in the UAE.
+You are speaking directly with ${customer.full_name}. ALWAYS address them by their personal first name "${customer.first_name}" (NEVER call them by their company name "${customer.company_name}").
+Their eligible offers in Portal 360 are:
+${customer.offers.map(o => `- ${o.title} (${o.discount}): ${o.description}`).join("\n")}
+Rules:
+1. Sound 100% like a natural human caller—use contractions, warmth, and keep your reply to 1-2 short spoken sentences.
+2. If they mention an offer briefly, confirm the exact offer name with them before booking it.
+3. Do NOT offer to transfer them to a Relationship Officer unless they explicitly ask for a human, are furious/refusing to listen, or ask for company liquidation.`;
+
+          const geminiContents = conversationState.history.slice(-6).map(m => ({
+            role: m.role === "assistant" ? "model" : "user",
+            parts: [{ text: m.content }]
+          }));
+
+          const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(geminiKey)}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              systemInstruction: { parts: [{ text: sysPrompt }] },
+              contents: geminiContents,
+              generationConfig: { temperature: 0.7, maxOutputTokens: 150 }
+            })
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            const llmReply = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+            if (llmReply) {
+              conversationState.history.push({ role: "assistant", content: llmReply });
+              appendMessage("ai", llmReply, "Live Gemini 2.5 Flash Improvised Response");
+              speakText(llmReply);
+              return;
+            }
+          }
+        } catch (err) {
+          // Fall back cleanly
+        }
+      }
+
       const openaiKey = (document.getElementById("openaiKeyInput")?.value || "").trim();
       if (openaiKey.startsWith("sk-")) {
         try {
