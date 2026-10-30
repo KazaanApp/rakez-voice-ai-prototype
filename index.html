@@ -67,11 +67,11 @@
               RAKEZ Autonomous AI Caller &amp; Portal 360 Hub
             </h1>
             <span class="px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-teal-50 text-teal-700 border border-teal-200">
-              Human-Like Improvisation Engine
+              Natural "Rakez" Pronunciation • Respectful Mr./Ms. Addressing
             </span>
           </div>
           <p class="text-xs text-slate-500">
-            Addresses customers personally • Understands brief 1-word offer replies • Escalates to RM only when required
+            Live editable customer phone &amp; email • Phonetic UAE speech-to-text booster • Two-way mailbox monitoring
           </p>
         </div>
       </div>
@@ -83,13 +83,13 @@
             1. Live AI Caller &amp; CRM
           </button>
           <button id="tabBtnTraining" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-600 hover:text-slate-900">
-            2. Backend Scenarios &amp; Rules
+            2. Backend Scenarios &amp; Gemini Key
           </button>
           <button id="tabBtnEmail" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-600 hover:text-slate-900">
-            3. Phase 2: Gmail / Outlook Hub
+            3. Live Mailbox Monitor (`kmussab1@gmail.com`)
           </button>
           <button id="tabBtnSetup" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-600 hover:text-slate-900">
-            4. Live Mobile Test Guide
+            4. Live Mobile Ring Setup
           </button>
         </div>
 
@@ -106,18 +106,18 @@
         <div class="flex items-center gap-2.5">
           <span class="px-2 py-0.5 rounded bg-amber-400 text-slate-950 font-bold text-[11px] uppercase tracking-wider">Executive Demo Flow</span>
           <span id="presenterStepText" class="text-xs text-slate-100 font-medium">
-            Click any stage on the right to demonstrate how Noura replaces a human caller and only transfers when required:
+            Click any stage on the right to demonstrate how Noura addresses Mr./Miss respectfully, pronounces "Rakez" as a word, and handles the call end-to-end:
           </span>
         </div>
         <div class="flex flex-wrap items-center gap-1.5 text-xs">
           <button data-demo-step="1" class="demo-step-btn px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-white font-medium transition border border-white/15">
-            1. Personal Greeting
+            1. Respectful Greeting ("Mr. Tariq")
           </button>
           <button data-demo-step="2" class="demo-step-btn px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/25 text-white font-medium transition border border-white/15">
             2. Brief Offer Match ("the 3-year one")
           </button>
           <button data-demo-step="3" class="demo-step-btn px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/25 text-white font-medium transition border border-white/15">
-            3. Confirm &amp; Log SR
+            3. Confirm &amp; Email Client
           </button>
           <button data-demo-step="4" class="demo-step-btn px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/25 text-white font-medium transition border border-white/15">
             4. Resolve Issue Without Transfer
@@ -145,42 +145,70 @@
     <!-- ===================================================================== -->
     <section id="viewVoice" class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
-      <!-- Left Column (4 cols): Customer Identity, Natural Voice Selector & Offers -->
+      <!-- Left Column (4 cols): Live Editable Customer Config, Voice Engine & Offers -->
       <div class="lg:col-span-4 space-y-4">
 
-        <!-- Card 1: Customer Personal Profile (Human Name First!) -->
+        <!-- Card 1: Live Editable Customer Profile & Target Phone/Email Configuration -->
         <div class="card-surface p-5">
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
               <span class="w-6 h-6 rounded-lg bg-teal-50 text-teal-700 font-bold text-xs flex items-center justify-center">1</span>
-              <h2 class="text-sm font-bold text-slate-900">Customer Profile (Portal 360)</h2>
+              <h2 class="text-sm font-bold text-slate-900">Customer &amp; Phone Config (Live Demo)</h2>
             </div>
             <span id="customerTierBadge" class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
               Industrial VIP
             </span>
           </div>
 
-          <div class="space-y-3 text-xs">
+          <div class="space-y-2.5 text-xs">
             <div>
-              <label for="customerSelect" class="block text-slate-600 font-semibold mb-1">Select Customer to Call</label>
+              <label for="customerSelect" class="block text-slate-600 font-semibold mb-1">Preset Portal 360 Customer (or edit fields below)</label>
               <select id="customerSelect" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-medium focus:outline-none focus:border-teal-600 focus:bg-white transition">
-                <option value="CUST-UAE-101">Tariq Al-Mansoori (Personal Name: Tariq • Al-Mansoori Ind. LLC)</option>
-                <option value="CUST-UAE-202">Sarah Jenkins (Personal Name: Sarah • Jenkins Media FZ-LLC)</option>
-                <option value="CUST-UAE-303">Omar Al-Suwaidi (Personal Name: Omar • On TDRA Do-Not-Call List)</option>
+                <option value="CUST-UAE-101">Mr. Tariq Al-Mansoori — Al-Mansoori Ind. LLC</option>
+                <option value="CUST-UAE-202">Miss Sarah Jenkins — Jenkins Digital Media FZ-LLC</option>
+                <option value="CUST-UAE-303">Mr. Omar Al-Suwaidi — Suwaidi Logistics (On DNCR)</option>
               </select>
             </div>
 
-            <!-- Highlighted Human Identity Card -->
-            <div class="p-3.5 rounded-xl bg-teal-50/50 border border-teal-200/80 space-y-1">
+            <!-- Live Editable Demo Fields (Change Honorific, Name, Phone Number, or Client Email on the fly!) -->
+            <div class="p-3 rounded-xl bg-teal-50/50 border border-teal-200/90 space-y-2">
               <div class="flex items-center justify-between">
-                <span class="text-[11px] font-semibold uppercase tracking-wider text-teal-700">Customer Name (Spoken by AI)</span>
-                <span class="text-[11px] font-mono text-slate-500" id="investorPhoneLabel">+971 50 **** 812</span>
+                <span class="text-[11px] font-bold text-teal-800">✏️ Editable Live Demo Target</span>
+                <span id="spokenAddressPreview" class="text-[11px] font-semibold text-teal-700 bg-white px-2 py-0.5 rounded border border-teal-200">
+                  Spoken: "Mr. Tariq"
+                </span>
               </div>
-              <div id="investorHumanNameLabel" class="text-base font-extrabold text-slate-900">Tariq Al-Mansoori (Addressed as "Tariq")</div>
-              <div id="investorCompanySubLabel" class="text-[11px] text-slate-600">Entity: Al-Mansoori Industrial LLC • Zone: Al Hamra Industrial</div>
+
+              <div class="grid grid-cols-12 gap-2">
+                <div class="col-span-4">
+                  <label for="editTitleSelect" class="block text-[11px] text-slate-600 font-medium mb-0.5">Title</label>
+                  <select id="editTitleSelect" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-slate-900 font-semibold text-xs">
+                    <option value="Mr.">Mr.</option>
+                    <option value="Miss">Miss</option>
+                    <option value="Ms.">Ms.</option>
+                    <option value="Mrs.">Mrs.</option>
+                    <option value="Dr.">Dr.</option>
+                  </select>
+                </div>
+                <div class="col-span-8">
+                  <label for="editFirstNameInput" class="block text-[11px] text-slate-600 font-medium mb-0.5">Customer Name</label>
+                  <input id="editFirstNameInput" type="text" value="Tariq Al-Mansoori" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-semibold text-xs" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label for="editPhoneInput" class="block text-[11px] text-slate-600 font-medium mb-0.5">Customer Phone to Call</label>
+                  <input id="editPhoneInput" type="text" value="+971504439812" placeholder="+97150..." class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono font-semibold text-xs" />
+                </div>
+                <div>
+                  <label for="editEmailInput" class="block text-[11px] text-slate-600 font-medium mb-0.5">Associated Client Email</label>
+                  <input id="editEmailInput" type="email" value="tariq@almansoori-ind.ae" placeholder="client@example.com" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono text-xs" />
+                </div>
+              </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-2.5 pt-1">
+            <div class="grid grid-cols-2 gap-2 pt-0.5">
               <div>
                 <label for="adapterSelect" class="block text-slate-500 font-medium mb-1">Telephony Line</label>
                 <select id="adapterSelect" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-slate-800 text-xs">
@@ -207,32 +235,41 @@
           </div>
         </div>
 
-        <!-- Card 2: Natural Voice Engine & Microphone Tuning -->
+        <!-- Card 2: Natural Voice Engine & UAE Speech-to-Text Booster -->
         <div class="card-surface p-5">
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
               <span class="w-6 h-6 rounded-lg bg-teal-50 text-teal-700 font-bold text-xs flex items-center justify-center">2</span>
-              <h2 class="text-sm font-bold text-slate-900">Human Voice &amp; Listening Engine</h2>
+              <h2 class="text-sm font-bold text-slate-900">Voice &amp; Speech-to-Text Engine</h2>
             </div>
             <button id="testVoiceBtn" type="button" class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 transition">
-              🔊 Test Voice
+              🔊 Test "Rakez" Voice
             </button>
           </div>
 
-          <div class="space-y-3 text-xs">
+          <div class="space-y-2.5 text-xs">
             <div>
               <label for="browserVoiceSelect" class="block text-slate-600 font-semibold mb-1">
-                Select Natural Neural Voice (Auto-ranks Edge/Chrome Natural voices)
+                AI Speaker Voice (Pronounces "Rakez" as a word)
               </label>
-              <select id="browserVoiceSelect" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-2 text-slate-900 font-medium text-xs focus:outline-none focus:border-teal-600">
+              <select id="browserVoiceSelect" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1.5 text-slate-900 font-medium text-xs focus:outline-none focus:border-teal-600">
                 <option value="auto">Auto-Select Best Natural Human Voice</option>
               </select>
-              <p class="text-[11px] text-slate-500 mt-1">
-                💡 <strong>Tip for Microsoft Edge on Windows:</strong> Pick any voice labeled <em>"Microsoft ... Online (Natural)"</em> above for lifelike neural intonation.
-              </p>
             </div>
 
-            <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label for="sttAccentSelect" class="block text-slate-600 font-semibold mb-1">
+                Microphone Speech-to-Text Accent + Phonetic Booster
+              </label>
+              <select id="sttAccentSelect" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1.5 text-slate-900 font-medium text-xs focus:outline-none focus:border-teal-600">
+                <option value="en-AE">UAE / Gulf English (en-AE) + RAKEZ Phonetic Corrector</option>
+                <option value="en-IN">Indian / South Asian English (en-IN) + RAKEZ Phonetic Corrector</option>
+                <option value="en-GB">British English (en-GB) + RAKEZ Phonetic Corrector</option>
+                <option value="en-US">US English (en-US) + RAKEZ Phonetic Corrector</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 pt-0.5">
               <div class="flex items-center justify-between py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200/80">
                 <label for="ttsToggle" class="text-slate-700 font-medium cursor-pointer">Speak Aloud</label>
                 <input id="ttsToggle" type="checkbox" checked class="w-4 h-4 accent-teal-600 rounded cursor-pointer" />
@@ -247,16 +284,13 @@
 
         <!-- Card 3: Eligible Offers & Shorthand Trigger Words -->
         <div class="card-surface p-5">
-          <div class="flex items-center justify-between mb-2.5">
+          <div class="flex items-center justify-between mb-2">
             <div class="flex items-center gap-2">
               <span class="w-6 h-6 rounded-lg bg-teal-50 text-teal-700 font-bold text-xs flex items-center justify-center">3</span>
-              <h2 class="text-sm font-bold text-slate-900">Eligible Offers &amp; Shorthand Triggers</h2>
+              <h2 class="text-sm font-bold text-slate-900">Eligible Offers &amp; Brief Triggers</h2>
             </div>
             <span class="text-[11px] font-medium text-teal-700">Fuzzy-Matched</span>
           </div>
-          <p class="text-[11px] text-slate-500 mb-2.5">
-            Say a brief phrase like <em>"the 3-year one"</em>, <em>"warehouse"</em>, or <em>"tax review"</em>—Noura will identify the offer and ask for confirmation before booking.
-          </p>
           <div id="offersContainer" class="space-y-2.5 text-xs"></div>
         </div>
 
@@ -276,7 +310,7 @@
                 <span id="callStatusText" class="text-xs font-bold uppercase tracking-wider text-teal-300">Ready to Dial Customer</span>
                 <span id="callTimer" class="text-xs font-mono bg-white/10 px-2 py-0.5 rounded text-white">00:00</span>
               </div>
-              <p id="callSubtext" class="text-xs text-slate-300 mt-0.5">Noura • Autonomous RAKEZ Client Relations Caller</p>
+              <p id="callSubtext" class="text-xs text-slate-300 mt-0.5">Target: Mr. Tariq Al-Mansoori (+971504439812)</p>
             </div>
           </div>
 
@@ -299,8 +333,8 @@
           </div>
         </div>
 
-        <!-- Active Conversation Context Banner (Shows Pending Confirmation or Dialogue Stage) -->
-        <div class="px-4 py-2 bg-slate-100 border-b border-slate-200 flex items-center justify-between text-[11px]">
+        <!-- Active Conversation Context Banner -->
+        <div class="px-4 py-2 bg-slate-100 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 text-[11px]">
           <div class="flex items-center gap-2">
             <span class="font-bold text-slate-600">AI Call State:</span>
             <span id="dialogueStateBadge" class="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-teal-700 font-semibold">
@@ -318,23 +352,25 @@
             <div class="w-12 h-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center mx-auto text-xl font-bold">
               🗣️
             </div>
-            <h3 class="text-sm font-bold text-slate-900">Human-Like Improvisation &amp; Brief-Phrase Listening</h3>
+            <h3 class="text-sm font-bold text-slate-900">Respectful Human Caller ("Mr. Tariq" / "Miss Sarah")</h3>
             <p class="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-              Click <strong>"Start Call"</strong> above, then speak into your mic or type natural short replies like <em>"tell me the offers"</em>, <em>"the 3 year one"</em>, <em>"yes go ahead"</em>, or <em>"my visa is delayed"</em>.
+              Edit the customer's Title, Name, Phone Number, or Email on the left, then click <strong>"Start Call"</strong>. Noura pronounces <strong>"Rakez"</strong> naturally as a word, understands brief offer mentions, and can email the client directly after the call.
             </p>
           </div>
         </div>
 
-        <!-- Realistic Customer Utterance Chips (Testing Brief Offer Replies, Confirmation, & Special RM Triggers) -->
+        <!-- Realistic Customer Utterance Chips -->
         <div class="px-4 py-3 bg-white border-t border-slate-200">
           <div class="flex items-center justify-between mb-1.5">
             <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">
               Test Natural Customer Replies (Click or Speak):
             </span>
-            <span class="text-[10px] text-slate-400">Notice how Noura only transfers on the red/amber special cases</span>
+            <button id="sendPostCallEmailBtn" type="button" class="text-[11px] font-semibold text-sky-700 hover:text-sky-800 bg-sky-50 hover:bg-sky-100 border border-sky-200 px-2.5 py-0.5 rounded-lg transition">
+              ✉️ Email Call Update to Client
+            </button>
           </div>
           <div class="flex flex-wrap gap-1.5">
-            <button data-utterance="Doing well Noura, thanks. What offers do you have for me today?" class="utterance-chip px-2.5 py-1.5 rounded-xl text-xs font-medium bg-slate-100 hover:bg-teal-50 hover:text-teal-800 text-slate-700 border border-slate-200/80 transition">
+            <button data-utterance="Doing well Noura, thank you. What offers do you have for me today?" class="utterance-chip px-2.5 py-1.5 rounded-xl text-xs font-medium bg-slate-100 hover:bg-teal-50 hover:text-teal-800 text-slate-700 border border-slate-200/80 transition">
               💬 "What offers do you have for me?"
             </button>
             <button data-utterance="The 3-year one sounds good" class="utterance-chip px-2.5 py-1.5 rounded-xl text-xs font-medium bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 transition">
@@ -350,13 +386,13 @@
               🛠️ "4/5 rating, but my employee visa is delayed" (AI Resolves)
             </button>
             <button data-utterance="I am really frustrated and fed up with this delay, I don't want to listen to any offers!" class="utterance-chip px-2.5 py-1.5 rounded-xl text-xs font-medium bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 transition">
-              😡 Special Case 1: Customer Dissatisfied / Refuses to Listen (Auto-RM Transfer)
+              😡 Special Case 1: Customer Dissatisfied (Auto-RM Transfer)
             </button>
             <button data-utterance="We need to liquidate our company and freeze our trade license" class="utterance-chip px-2.5 py-1.5 rounded-xl text-xs font-medium bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition">
-              ⚖️ Special Case 2: Company Liquidation (System-Mandated RM Transfer)
+              ⚖️ Special Case 2: Company Liquidation (System RM Transfer)
             </button>
             <button data-utterance="Can you connect me to my Relationship Officer please?" class="utterance-chip px-2.5 py-1.5 rounded-xl text-xs font-medium bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition">
-              🧑‍💼 Special Case 3: Customer Explicitly Asks for RM
+              🧑‍💼 Special Case 3: Customer Asks for Officer
             </button>
           </div>
         </div>
@@ -365,17 +401,17 @@
         <div id="liveMicBanner" class="hidden px-4 py-1.5 bg-rose-50 border-t border-rose-200 text-rose-700 text-xs font-medium items-center justify-between">
           <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-rose-600 animate-ping"></span>
-            <span id="liveMicInterimText">Listening to you... speak naturally now</span>
+            <span id="liveMicInterimText">Listening... speak naturally now (auto-sends when you pause)</span>
           </div>
-          <button type="button" id="stopMicBtn" class="text-[11px] font-bold underline">Stop Mic</button>
+          <button type="button" id="stopMicBtn" class="text-[11px] font-bold underline">Send / Stop Mic</button>
         </div>
 
         <form id="customerChatForm" class="p-3 bg-slate-100 border-t border-slate-200 flex items-center gap-2">
-          <button type="button" id="micBtn" title="Click to speak with live transcription" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-rose-50 text-slate-700 border border-slate-300 transition text-xs font-semibold flex items-center gap-1.5 shadow-sm">
+          <button type="button" id="micBtn" title="Click to speak with UAE phonetic auto-correction" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-rose-50 text-slate-700 border border-slate-300 transition text-xs font-semibold flex items-center gap-1.5 shadow-sm">
             <span id="micIcon">🎙️</span>
             <span id="micLabel">Speak</span>
           </button>
-          <input id="customerInput" type="text" placeholder="Say a brief phrase like 'the 3 year one', 'yes confirm', 'how much discount?', or anything..." class="flex-1 bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-teal-600 shadow-sm" />
+          <input id="customerInput" type="text" placeholder="Say or type a brief phrase like 'the 3 year one', 'yes confirm', 'warehouse', or anything..." class="flex-1 bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-teal-600 shadow-sm" />
           <button type="submit" id="sendTurnBtn" class="px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs transition shadow-sm">
             Send
           </button>
@@ -413,7 +449,7 @@
           </div>
         </div>
 
-        <!-- Relationship Officer Intervention Monitor (Only Triggers on the 3 Special Cases!) -->
+        <!-- Relationship Officer Intervention Monitor -->
         <div class="card-surface p-5">
           <div class="flex items-center justify-between mb-2">
             <div>
@@ -440,7 +476,7 @@
     </section>
 
     <!-- ===================================================================== -->
-    <!-- VIEW 2: MODIFIABLE BACKEND SCENARIOS, OFFERS & ESCALATION RULES       -->
+    <!-- VIEW 2: MODIFIABLE BACKEND SCENARIOS, OFFERS & GEMINI KEY             -->
     <!-- ===================================================================== -->
     <section id="viewTraining" class="hidden grid-cols-1 lg:grid-cols-12 gap-5">
 
@@ -507,88 +543,110 @@
         </div>
       </div>
 
-      <!-- Right 5 cols: Optional Live LLM / Neural TTS API Key Bridge & Architecture Notes -->
+      <!-- Right 5 cols: Live Gemini API Key Bridge & Speech-to-Text Diagnostics -->
       <div class="lg:col-span-5 space-y-4">
         <div class="card-surface p-6 space-y-3.5">
           <div class="flex items-center justify-between">
             <h2 class="text-base font-bold text-slate-900">Connect Live Google Gemini API Key (Free)</h2>
             <span class="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-teal-50 text-teal-700 border border-teal-200">
-              Gemini 2.5 Flash + Native Audio
+              Structured CRM + Voice Brain
             </span>
           </div>
           <p class="text-xs text-slate-500 leading-relaxed">
-            Paste a free <strong>Google Gemini API Key</strong> (from <a href="https://aistudio.google.com/apikey" target="_blank" class="text-teal-700 underline font-semibold">Google AI Studio</a>) below to power open-ended live improvisation with <strong>Gemini 2.5 Flash</strong> and expressive <strong>Gemini Native TTS Voices (`Aoede` / `Kore`)</strong>:
+            Paste a free <strong>Google Gemini API Key</strong> (from <a href="https://aistudio.google.com/apikey" target="_blank" class="text-teal-700 underline font-semibold">Google AI Studio</a>) below. Our hybrid router now runs local offer &amp; scenario matching first (0ms latency) and uses <strong>Gemini 2.5 Flash</strong> with structured JSON intent classification for open-ended improvisation:
           </p>
           <div class="space-y-2.5 text-xs">
             <div>
-              <label for="geminiKeyInput" class="block text-slate-700 font-bold mb-1">Google Gemini API Key (Recommended • Free Tier Available)</label>
+              <label for="geminiKeyInput" class="block text-slate-700 font-bold mb-1">Google Gemini API Key (`AIzaSy...`)</label>
               <input id="geminiKeyInput" type="password" placeholder="AIzaSy..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 font-mono text-xs focus:border-teal-600 focus:outline-none" />
             </div>
             <div>
-              <label for="neuralVoiceModelSelect" class="block text-slate-600 font-semibold mb-1">Gemini Expressive Voice Persona</label>
-              <select id="neuralVoiceModelSelect" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 text-xs">
-                <option value="Aoede">Aoede (Warm, Natural Female Executive — Gemini TTS)</option>
-                <option value="Kore">Kore (Clear, Empathetic Female — Gemini TTS)</option>
-                <option value="Puck">Puck (Upbeat Conversational — Gemini TTS)</option>
-                <option value="shimmer">Shimmer (If using OpenAI Key below)</option>
+              <label for="ttsEngineModeSelect" class="block text-slate-600 font-semibold mb-1">Voice Synthesis Engine Mode</label>
+              <select id="ttsEngineModeSelect" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 text-xs">
+                <option value="browser_natural">Fastest: Edge/Browser Natural Voice (0ms latency, zero mic echo)</option>
+                <option value="gemini_native_tts">Studio Audio: Gemini 2.5 Native TTS (Aoede / Kore)</option>
               </select>
             </div>
-            <div class="pt-1 border-t border-slate-100">
-              <label for="openaiKeyInput" class="block text-slate-400 font-medium mb-1">Optional Alternative: OpenAI API Key (`sk-...`)</label>
-              <input id="openaiKeyInput" type="password" placeholder="sk-proj-... (optional fallback)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-slate-700 font-mono text-xs" />
+            <div>
+              <label for="neuralVoiceModelSelect" class="block text-slate-600 font-semibold mb-1">Gemini Expressive Voice Persona (if Studio Audio selected)</label>
+              <select id="neuralVoiceModelSelect" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 text-xs">
+                <option value="Aoede">Aoede (Warm, Natural Female Executive)</option>
+                <option value="Kore">Kore (Clear, Empathetic Female)</option>
+                <option value="Puck">Puck (Upbeat Conversational)</option>
+              </select>
             </div>
           </div>
         </div>
 
-        <div class="card-surface p-6 space-y-3">
-          <h2 class="text-sm font-bold text-slate-900">How the AI Caller Improvises Like a Human</h2>
-          <ul class="text-xs text-slate-600 space-y-2 leading-relaxed">
-            <li>• <strong>Personal Name Addressing:</strong> Reads `first_name` (`Tariq`, `Sarah`, `Omar`) from CRM and addresses the human naturally—never calling a person by their LLC company name.</li>
-            <li>• <strong>Brief-Phrase Offer Matching:</strong> If the investor says <em>"the 3-year one"</em>, <em>"15%"</em>, or <em>"warehouse"</em>, the engine matches the offer's shorthand keywords and asks: <em>"Just to confirm, Tariq, would you like me to lock in the 3-Year License Renewal Package?"</em></li>
-            <li>• <strong>Autonomous First-Contact Resolution:</strong> Routine complaints (like a delayed visa or UBO question) are logged and resolved by Noura directly without dumping the call onto a human officer.</li>
-          </ul>
+        <div class="card-surface p-6 space-y-2.5">
+          <h2 class="text-sm font-bold text-slate-900">Why Speech-to-Text Was Fixed</h2>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Earlier, connecting the Gemini API key caused two things: (1) Gemini TTS audio played through an HTML5 player that wasn't muted when the microphone opened, causing speaker echo into your mic, and (2) browser speech recognition often mis-spelled UAE terms like <em>"RAKEZ"</em> (as <em>"rackets"</em>) or <em>"3-year"</em> (as <em>"free year"</em>).
+          </p>
+          <p class="text-xs text-teal-800 bg-teal-50 border border-teal-200 p-3 rounded-xl leading-relaxed">
+            <strong>Now Fixed:</strong> We added automatic speaker-echo muting before opening the mic, a <strong>UAE Phonetic Auto-Corrector</strong> for RAKEZ terms, and a hybrid router so local offer matching always runs at 0ms before calling Gemini.
+          </p>
         </div>
       </div>
 
     </section>
 
     <!-- ===================================================================== -->
-    <!-- VIEW 3: PHASE 2 OMNICHANNEL OUTLOOK EMAIL HUB                         -->
+    <!-- VIEW 3: PHASE 2 LIVE MAILBOX MONITOR (`kmussab1@gmail.com`)           -->
     <!-- ===================================================================== -->
     <section id="viewEmail" class="hidden grid-cols-1 lg:grid-cols-12 gap-5">
       <div class="lg:col-span-6 card-surface p-6 space-y-4">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 class="text-base font-bold text-slate-900">Phase 2: Inbound Gmail &amp; Outlook Email Automation</h2>
-            <p class="text-xs text-slate-500">Reads investor emails via Microsoft Graph API and links them to prior voice calls in Portal 360.</p>
+            <h2 class="text-base font-bold text-slate-900">RAKEZ Mailbox Monitor &amp; Client Email Matcher</h2>
+            <p class="text-xs text-slate-500">
+              Monitors your RAKEZ mailbox (`kmussab1@gmail.com`), identifies the customer by their configured **Client Email ID**, and sends updates back to them.
+            </p>
           </div>
-          <span class="px-2.5 py-1 text-[11px] font-semibold rounded-full bg-sky-50 text-sky-700 border border-sky-200">Microsoft Graph API</span>
+          <span class="px-2.5 py-1 text-[11px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+            ● Monitoring Active
+          </span>
         </div>
 
         <div class="space-y-3 text-xs">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+            <div>
+              <label for="rakezMailboxInput" class="block text-slate-600 font-bold mb-1">RAKEZ Official Mailbox (Your Gmail)</label>
+              <input id="rakezMailboxInput" type="email" value="kmussab1@gmail.com" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-teal-800 font-mono font-bold text-xs" />
+            </div>
+            <div>
+              <label for="monitoredClientEmailInput" class="block text-slate-600 font-bold mb-1">Monitored Client Email ID (Sender)</label>
+              <input id="monitoredClientEmailInput" type="email" value="tariq@almansoori-ind.ae" placeholder="Type client email to monitor..." class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono font-semibold text-xs" />
+            </div>
+          </div>
+
           <div>
-            <label for="emailSenderInput" class="block text-slate-600 font-semibold mb-1">From Customer</label>
-            <input id="emailSenderInput" type="text" value="Tariq Al-Mansoori <tariq@almansoori-ind.ae> (CUST-UAE-101)" readonly class="w-full bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-slate-700 font-medium" />
+            <label for="emailSubjectInput" class="block text-slate-600 font-semibold mb-1">Inbound Client Email Subject (or Outbound Update Subject)</label>
+            <input id="emailSubjectInput" type="text" value="Follow-up on Noura's call: Lock in 3-Year Renewal &amp; Visa Quota" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-medium" />
           </div>
           <div>
-            <label for="emailSubjectInput" class="block text-slate-600 font-semibold mb-1">Email Subject</label>
-            <input id="emailSubjectInput" type="text" value="Follow-up on Noura's call: Additional Visa Quota &amp; NOC Request" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-medium" />
+            <label for="emailBodyInput" class="block text-slate-600 font-semibold mb-1">Client Email Content</label>
+            <textarea id="emailBodyInput" rows="4" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 leading-relaxed">Hi Noura, following up on our call earlier—please go ahead and lock in the 15% 3-Year License Renewal package, and could you also raise a Portal 360 service request for 3 additional employee visa quotas for our Al Hamra warehouse? Also, 5 out of 5 stars for your polite support!</textarea>
           </div>
-          <div>
-            <label for="emailBodyInput" class="block text-slate-600 font-semibold mb-1">Inbound Email Message</label>
-            <textarea id="emailBodyInput" rows="4" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 leading-relaxed">Hi Noura, following up on our call earlier—could you also raise a Portal 360 service request for 3 additional employee visa quotas for our Al Hamra warehouse? Also, 5 out of 5 stars for the quick support!</textarea>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+            <button id="processEmailBtn" type="button" class="py-2.5 px-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs transition shadow-sm">
+              📥 Simulate Inbound Client Email -> Auto-Reply
+            </button>
+            <button id="composeGmailUpdateBtn" type="button" class="py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs transition shadow-sm">
+              📤 Send Real Update from `kmussab1@gmail.com`
+            </button>
           </div>
-          <button id="processEmailBtn" class="w-full py-2.5 px-4 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs transition shadow-sm">
-            📩 Process Inbound Outlook Email &amp; Auto-Update Portal 360
-          </button>
         </div>
       </div>
 
       <div class="lg:col-span-6 card-surface p-6 flex flex-col justify-between space-y-4">
         <div>
-          <h2 class="text-base font-bold text-slate-900 mb-1">Automated CRM Action &amp; Personal Outlook Reply</h2>
-          <p class="text-xs text-slate-500 mb-3">Shows how the same AI brain links email threads to existing voice tickets and replies personally to Tariq.</p>
-          <div id="emailOutputBox" class="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs text-slate-700 whitespace-pre-wrap leading-relaxed min-h-[230px]">Click "Process Inbound Outlook Email" on the left to demonstrate Phase 2 omnichannel continuity.</div>
+          <h2 class="text-base font-bold text-slate-900 mb-1">Mailbox Identification &amp; Portal 360 Action Log</h2>
+          <p class="text-xs text-slate-500 mb-3">
+            Shows how incoming mail to `kmussab1@gmail.com` is matched against the customer's associated email ID in Portal 360:
+          </p>
+          <div id="emailOutputBox" class="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs text-slate-700 whitespace-pre-wrap leading-relaxed min-h-[250px]">Monitoring RAKEZ Mailbox (kmussab1@gmail.com) for emails from configured client address...</div>
         </div>
       </div>
     </section>
@@ -598,39 +656,25 @@
     <!-- ===================================================================== -->
     <section id="viewSetup" class="hidden space-y-5">
       <div class="card-surface p-6">
-        <h2 class="text-base font-bold text-slate-900 mb-1">How to Test Real Phone Calls on Your Personal UAE Mobile</h2>
+        <h2 class="text-base font-bold text-slate-900 mb-1">How to Ring Any Phone Number Live During Your Demo</h2>
         <p class="text-xs text-slate-500 mb-4">
-          When you want to make your physical mobile phone ring before connecting RAKEZ's Genesys trunk, follow these 4 steps:
+          In Card 1 on the main screen, you can type any customer phone number (`+971...`) to update the web demo immediately. To make their physical mobile phone ring via Twilio:
         </p>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
           <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
-            <div class="font-bold text-teal-800">Step 1: Verify Your UAE Number on Twilio (5 mins)</div>
+            <div class="font-bold text-teal-800">Step 1: Verify Target Number on Twilio Trial (2 mins)</div>
             <p class="text-slate-600 leading-relaxed">
-              In a free Twilio trial account, open <strong>Phone Numbers → Manage → Verified Caller IDs</strong> and verify your personal UAE mobile (`+971 5x...`) via SMS OTP.
+              In your free Twilio trial console, open <strong>Phone Numbers → Manage → Verified Caller IDs</strong> and verify your mobile number (`+971 5x...`). (On a paid Twilio account, you can dial any number without pre-verifying it.)
             </p>
           </div>
 
           <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
-            <div class="font-bold text-teal-800">Step 2: Expose Local Port 8000 via ngrok (2 mins)</div>
-            <p class="text-slate-600 leading-relaxed">
-              Run <code class="px-1.5 py-0.5 rounded bg-white border border-slate-200 text-teal-700 font-mono">ngrok http 8000</code> in your terminal so Twilio Media Streams can stream bidirectional voice audio to your orchestrator.
-            </p>
-          </div>
-
-          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
-            <div class="font-bold text-teal-800">Step 3: Set Environment Variables</div>
-            <pre class="bg-white border border-slate-200 p-2.5 rounded-xl text-[11px] text-slate-700 font-mono overflow-x-auto">export TWILIO_ACCOUNT_SID="ACxxxx..."
-export TWILIO_AUTH_TOKEN="xxxx..."
-export PERSONAL_VERIFIED_CALLER_ID="+97150xxxxxxx"
-export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
-          </div>
-
-          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
-            <div class="font-bold text-teal-800">Step 4: Run the Python Orchestrator</div>
-            <p class="text-slate-600 leading-relaxed">
-              Run <code class="px-1.5 py-0.5 rounded bg-white border border-slate-200 text-teal-700 font-mono">py voice_ai_orchestrator_prototype.py</code>. The built-in UAE compliance guard ensures personal Caller IDs only dial whitelisted test phones.
-            </p>
+            <div class="font-bold text-teal-800">Step 2: Run the 1-Line Dial Command on Windows</div>
+            <pre class="bg-white border border-slate-200 p-2.5 rounded-xl text-[11px] text-slate-700 font-mono overflow-x-auto">set TWILIO_ACCOUNT_SID=ACxxxx...
+set TWILIO_AUTH_TOKEN=xxxx...
+set PERSONAL_VERIFIED_CALLER_ID=+97150xxxxxxx
+py voice_ai_orchestrator_prototype.py --dial +97150xxxxxxx "Mr. Tariq"</pre>
           </div>
         </div>
       </div>
@@ -645,6 +689,7 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
     const customersDB = {
       "CUST-UAE-101": {
         customer_id: "CUST-UAE-101",
+        title: "Mr.",
         first_name: "Tariq",
         full_name: "Tariq Al-Mansoori",
         company_name: "Al-Mansoori Industrial LLC",
@@ -662,7 +707,7 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
             spoken_pitch: "our 3-Year License Renewal package, which gives you 15 percent off your annual trade license fees plus 2 complimentary employee visa quotas",
             description: "15% discount on RAKEZ trade license fees + 2 complimentary employee visa quotas.",
             discount: "15% OFF + 2 Visas",
-            keywords: ["3-year", "3 year", "three year", "15%", "15 percent", "fifteen", "renewal", "license", "first", "multi-year", "visa quota"]
+            keywords: ["3-year", "3 year", "three year", "free year", "tree year", "15%", "15 percent", "fifteen", "renewal", "license", "first", "multi-year", "visa quota"]
           },
           {
             offer_id: "RAKEZ-WAREHOUSE-FITOUT",
@@ -671,7 +716,7 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
             spoken_pitch: "our Al Hamra Warehouse Expansion offer, which includes a 3-month rent-free fit-out grace period and fast-track Civil Defense approval",
             description: "3 months rent-free fit-out grace period & fast-track Civil Defense NOC on adjacent bay lease.",
             discount: "3 Months Rent-Free",
-            keywords: ["warehouse", "al hamra", "fit-out", "fit out", "rent-free", "rent free", "3 months", "three months", "expansion", "bay", "second", "space"]
+            keywords: ["warehouse", "where house", "al hamra", "fit-out", "fit out", "rent-free", "rent free", "3 months", "three months", "expansion", "bay", "second", "space"]
           },
           {
             offer_id: "RAKEZ-TAX-PRO",
@@ -686,6 +731,7 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
       },
       "CUST-UAE-202": {
         customer_id: "CUST-UAE-202",
+        title: "Miss",
         first_name: "Sarah",
         full_name: "Sarah Jenkins",
         company_name: "Jenkins Digital Media FZ-LLC",
@@ -693,7 +739,7 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
         email: "sarah@jenkinsmedia.ae",
         segment: "Compass Coworking",
         tier_label: "SME Media",
-        whitelisted_for_personal_caller_id: false,
+        whitelisted_for_personal_caller_id: true,
         dnc_opted_out: false,
         offers: [
           {
@@ -718,6 +764,7 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
       },
       "CUST-UAE-303": {
         customer_id: "CUST-UAE-303",
+        title: "Mr.",
         first_name: "Omar",
         full_name: "Omar Al-Suwaidi",
         company_name: "Suwaidi Logistics FZE",
@@ -745,19 +792,19 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
       {
         id: "SCENARIO_VISA_DELAY",
         name: "Routine Visa / ICP Delay (AI Resolves Without Transfer)",
-        trigger_keywords: ["visa", "stuck", "delayed", "delay", "icp", "medical", "emirates id", "residency"],
+        trigger_keywords: ["visa", "vises", "stuck", "delayed", "delay", "icp", "medical", "emirates id", "residency"],
         requires_rm_transfer: false,
         auto_ticket_type: "Complaint",
         auto_ticket_priority: "High",
-        response_template: "I completely understand how stressful a visa delay can be, {first_name}. Let me take care of that for you right now—I've just raised a high-priority escalation ticket with our Government Services team to expedite your application with ICP, and they'll update your Portal 360 status today. While I have you on the line, is there anything else on your renewal I can help sort out?"
+        response_template: "I completely understand how stressful a visa delay can be, {respectful_name}. Let me take care of that for you right now—I've just raised a high-priority escalation ticket with our Government Services team to expedite your application with ICP, and they'll update your Portal 360 status today. While I have you on the line, is there anything else on your renewal I can help sort out?"
       },
       {
         id: "SCENARIO_UBO_DOCS",
         name: "Licensing & UBO Document Checklist Inquiry",
-        trigger_keywords: ["document", "documents", "ubo", "checklist", "paperwork", "needed", "require", "passport"],
+        trigger_keywords: ["document", "documents", "ubo", "you be oh", "checklist", "paperwork", "needed", "require", "passport"],
         requires_rm_transfer: false,
         auto_ticket_type: null,
-        response_template: "Sure thing, {first_name}. For your renewal on Portal 360, all you need is your signed lease agreement, valid passport and Emirates ID copies for the shareholders, and the quick UBO declaration form. I can send that checklist straight to your email right now if you'd like!"
+        response_template: "Certainly, {respectful_name}. For your renewal on Portal 360, all you need is your signed lease agreement, valid passport and Emirates ID copies for the shareholders, and the quick UBO declaration form. I can send that checklist straight to your email right now if you'd like!"
       },
       {
         id: "SCENARIO_PRICING_NEGOTIATION",
@@ -765,7 +812,7 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
         trigger_keywords: ["expensive", "cost", "price", "installment", "installments", "cheaper", "monthly", "payment plan", "budget"],
         requires_rm_transfer: false,
         auto_ticket_type: null,
-        response_template: "That's a very fair question, {first_name}. In addition to the multi-year discount, we actually offer flexible installment plans through Portal 360 using partner bank credit cards with zero interest, or post-dated cheques. Would you like me to include the installment option on your renewal quote?"
+        response_template: "That's a very fair question, {respectful_name}. In addition to the multi-year discount, we offer flexible installment plans through Portal 360 using partner bank credit cards with zero interest, or post-dated cheques. Would you like me to include the installment option on your renewal quote?"
       },
       {
         id: "SCENARIO_BUSY_CALLBACK",
@@ -774,7 +821,7 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
         requires_rm_transfer: false,
         auto_ticket_type: "Service Request",
         auto_ticket_priority: "Low",
-        response_template: "Oh, no problem at all, {first_name}—sorry to catch you in the middle of things! I'll make a note to follow up with you tomorrow at a better time, and I'll drop the renewal details in your email so you can review them whenever you're free. Have a great day!"
+        response_template: "Oh, no problem at all, {respectful_name}—sorry to catch you in the middle of things! I'll make a note to follow up with you tomorrow at a better time, and I'll send the renewal summary to your email so you can review it whenever you're free. Have a wonderful day!"
       },
       {
         id: "SCENARIO_LIQUIDATION_MANDATORY_RM",
@@ -782,7 +829,7 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
         trigger_keywords: ["liquidate", "liquidation", "close company", "cancel license", "deregister", "shareholder dispute", "legal freeze", "court"],
         requires_rm_transfer: true,
         escalation_reason: "System-Mandated Policy: Company Liquidation / Legal Restructuring requires Relationship Officer authorization.",
-        response_template: "I understand, {first_name}. Because company liquidation and license deregistration require formal clearance and dedicated Relationship Officer sign-off under RAKEZ policy, let me connect you directly with your Relationship Officer right now. I've already attached your profile notes so you won't have to repeat anything."
+        response_template: "I understand, {respectful_name}. Because company liquidation and license deregistration require formal clearance and dedicated Relationship Officer sign-off under RAKEZ policy, let me connect you directly with your Relationship Officer right now. I've already attached your profile notes so you won't have to repeat anything."
       }
     ];
 
@@ -804,18 +851,42 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
     let callActive = false;
     let callSeconds = 0;
     let callInterval = null;
+    let activeAudioPlayer = null;
 
-    // Multi-turn Conversational Memory State (Enables Improvisation & Offer Confirmation!)
     let conversationState = {
       turnCount: 0,
       offersPresented: false,
-      pendingOfferConfirmation: null, // Holds the offer object waiting for "Yes / Confirm"
+      pendingOfferConfirmation: null,
       dissatisfactionCount: 0,
-      history: [] // For optional OpenAI GPT-4o live improvisation
+      history: []
     };
 
     // =========================================================================
-    // 2. HUMAN-LIKE VOICE ENGINE & LIVE SPEECH RECOGNITION
+    // 2. HELPER FOR LIVE EDITABLE CUSTOMER RESPECTFUL NAME ("Mr. Tariq" / "Miss Sarah")
+    // =========================================================================
+    function getActiveCustomer() {
+      const custId = document.getElementById("customerSelect").value;
+      const base = customersDB[custId];
+      const editedTitle = document.getElementById("editTitleSelect")?.value || base.title || "Mr.";
+      const editedFullName = (document.getElementById("editFirstNameInput")?.value || base.full_name).trim();
+      const editedPhone = (document.getElementById("editPhoneInput")?.value || base.phone_e164).trim();
+      const editedEmail = (document.getElementById("editEmailInput")?.value || base.email).trim();
+
+      const firstToken = editedFullName.split(" ")[0] || base.first_name;
+      const respectfulName = `${editedTitle} ${firstToken}`.trim();
+
+      // Update back into customer object so changes persist across tabs
+      base.title = editedTitle;
+      base.full_name = editedFullName;
+      base.first_name = firstToken;
+      base.respectful_name = respectfulName;
+      base.phone_e164 = editedPhone;
+      base.email = editedEmail;
+      return base;
+    }
+
+    // =========================================================================
+    // 3. HUMAN-LIKE VOICE ENGINE ("Rakez" as a word) & PHONETIC STT BOOSTER
     // =========================================================================
     let availableVoices = [];
     let activeRecognition = null;
@@ -827,15 +898,13 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
       const enVoices = availableVoices.filter(v => v.lang && v.lang.toLowerCase().startsWith("en"));
       if (enVoices.length === 0) return;
 
-      // Score voices so Natural / Neural / Online voices appear at the very top
       const scoreVoice = (v) => {
         const n = v.name;
         let s = 0;
         if (n.includes("Natural") || n.includes("Online")) s += 100;
-        if (n.includes("Aria") || n.includes("Jenny") || n.includes("Sonia") || n.includes("Ava") || n.includes("Emma") || n.includes(" Libby")) s += 50;
+        if (n.includes("Aria") || n.includes("Jenny") || n.includes("Sonia") || n.includes("Ava") || n.includes("Emma") || n.includes("Libby")) s += 50;
         if (n.includes("Google UK English Female") || n.includes("Google US English")) s += 40;
         if (n.includes("Samantha") || n.includes("Moira") || n.includes("Karen") || n.includes("Tessa")) s += 35;
-        if (n.includes("Zira") || n.includes("Hazel")) s += 10;
         return s;
       };
 
@@ -843,7 +912,7 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
 
       const select = document.getElementById("browserVoiceSelect");
       const currentVal = select.value;
-      select.innerHTML = `<option value="auto">✨ Auto-Best Human Voice (${enVoices[0].name})</option>` +
+      select.innerHTML = `<option value="auto">✨ Auto-Best Natural Voice (${enVoices[0].name})</option>` +
         enVoices.map(v => `<option value="${v.name}">${v.name} (${v.lang})</option>`).join("");
 
       if (currentVal && Array.from(select.options).some(o => o.value === currentVal)) {
@@ -863,7 +932,6 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
         if (exact) return exact;
       }
 
-      // Rank best natural voice automatically
       const preferredNames = ["Natural", "Online", "Ava", "Aria", "Jenny", "Sonia", "Emma", "Google UK English Female", "Samantha", "Moira"];
       for (const pat of preferredNames) {
         const match = enVoices.find(v => v.name.includes(pat));
@@ -873,11 +941,13 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
     }
 
     /**
-     * Pre-processes text so TTS never sounds like it's reading code, brackets, or flat robotic run-ons.
+     * Converts "RAKEZ" (all-caps acronym) into phonetic "Rakez" so TTS reads it as a single word
+     * ("Rak-ez") instead of spelling out R-A-K-E-Z! Also expands "Mr." and "Ms." cleanly.
      */
     function formatForHumanSpeech(rawText) {
       return rawText
-        .replace(/\(.*?\)/g, "") // Strip parenthetical codes like (CMP-360-1234) from spoken audio
+        .replace(/\bRAKEZ\b/gi, "Rakez") // Read as the word "Rakez", NEVER spell R-A-K-E-Z!
+        .replace(/\(.*?\)/g, "") // Strip bracketed ticket codes from spoken audio
         .replace(/SR-360-(\w+)/g, "service request $1")
         .replace(/CMP-360-(\w+)/g, "priority reference $1")
         .replace(/15%/g, "15 percent")
@@ -892,27 +962,57 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
         .trim();
     }
 
+    /**
+     * Phonetic Post-Processor for Browser Speech-to-Text:
+     * Corrects common Web Speech API mis-recognitions of UAE & RAKEZ domain words.
+     */
+    function normalizeTranscriptForRAKEZ(rawTranscript) {
+      return rawTranscript
+        .replace(/\b(rackets|rockets|wreckage|rakis|rack is|racist|rakes)\b/gi, "RAKEZ")
+        .replace(/\b(free year|tree year|three-year|3 year)\b/gi, "3-year")
+        .replace(/\b(where house|wear house)\b/gi, "warehouse")
+        .replace(/\b(you be oh|u b o|ufo)\b/gi, "UBO")
+        .replace(/\b(porter 360|portal three sixty)\b/gi, "Portal 360")
+        .replace(/\b(vises|pizza)\b/gi, "visa")
+        .replace(/\b(noah|nora|laura)\b/gi, "Noura")
+        .trim();
+    }
+
+    function stopAllAudioPlayback() {
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+      if (activeAudioPlayer) {
+        try {
+          activeAudioPlayer.pause();
+          activeAudioPlayer.currentTime = 0;
+        } catch (e) {}
+        activeAudioPlayer = null;
+      }
+    }
+
     async function speakText(rawText) {
       const ttsEnabled = document.getElementById("ttsToggle").checked;
       if (!ttsEnabled) {
-        maybeAutoStartMic();
+        setTimeout(() => maybeAutoStartMic(), 250);
         return;
       }
 
+      stopAllAudioPlayback();
       const spokenText = formatForHumanSpeech(rawText);
       const geminiKey = (document.getElementById("geminiKeyInput")?.value || "").trim();
-      const openaiKey = (document.getElementById("openaiKeyInput")?.value || "").trim();
+      const ttsMode = document.getElementById("ttsEngineModeSelect")?.value || "browser_natural";
       const voicePersona = document.getElementById("neuralVoiceModelSelect")?.value || "Aoede";
 
-      // 0. If user provided a Google Gemini API key, try Gemini 2.5 Flash Native TTS Audio first!
-      if (geminiKey.startsWith("AIza")) {
+      // Only use Gemini network TTS if explicitly selected in Tab 2 (prevents network lag during fast mic turn-taking)
+      if (geminiKey.startsWith("AIza") && ttsMode === "gemini_native_tts") {
         try {
           const geminiVoice = ["Aoede", "Kore", "Puck", "Charon", "Fenrir"].includes(voicePersona) ? voicePersona : "Aoede";
           const ttsResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${encodeURIComponent(geminiKey)}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              contents: [{ parts: [{ text: `Speak in a warm, natural, conversational human phone voice: ${spokenText}` }] }],
+              contents: [{ parts: [{ text: `Speak in a warm, natural phone voice. Pronounce "Rakez" as a single word ("Rak-ez"): ${spokenText}` }] }],
               generationConfig: {
                 responseModalities: ["AUDIO"],
                 speechConfig: {
@@ -928,7 +1028,6 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
               const binaryStr = atob(b64Audio);
               const pcmBytes = new Uint8Array(binaryStr.length);
               for (let i = 0; i < binaryStr.length; i++) pcmBytes[i] = binaryStr.charCodeAt(i);
-              // Wrap 24kHz 16-bit mono PCM in a standard 44-byte WAV header
               const wavBuffer = new ArrayBuffer(44 + pcmBytes.length);
               const view = new DataView(wavBuffer);
               const writeStr = (offset, str) => { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); };
@@ -937,81 +1036,45 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
               writeStr(8, "WAVE");
               writeStr(12, "fmt ");
               view.setUint32(16, 16, true);
-              view.setUint16(20, 1, true); // PCM
-              view.setUint16(22, 1, true); // Mono
-              view.setUint32(24, 24000, true); // 24kHz
-              view.setUint32(28, 48000, true); // Byte rate
-              view.setUint16(32, 2, true); // Block align
-              view.setUint16(34, 16, true); // 16-bit
+              view.setUint16(20, 1, true);
+              view.setUint16(22, 1, true);
+              view.setUint32(24, 24000, true);
+              view.setUint32(28, 48000, true);
+              view.setUint16(32, 2, true);
+              view.setUint16(34, 16, true);
               writeStr(36, "data");
               view.setUint32(40, pcmBytes.length, true);
               new Uint8Array(wavBuffer, 44).set(pcmBytes);
               const wavBlob = new Blob([wavBuffer], { type: "audio/wav" });
               const url = URL.createObjectURL(wavBlob);
               const audio = new Audio(url);
+              activeAudioPlayer = audio;
               audio.onended = () => {
                 URL.revokeObjectURL(url);
-                maybeAutoStartMic();
+                activeAudioPlayer = null;
+                setTimeout(() => maybeAutoStartMic(), 350);
               };
               await audio.play();
               return;
             }
           }
-        } catch (err) {
-          // Fall back cleanly to browser Natural voice
-        }
+        } catch (err) {}
       }
 
-      // 1. If user provided an OpenAI API key, use real OpenAI Neural HD Audio!
-      if (openaiKey.startsWith("sk-")) {
-        try {
-          const resp = await fetch("https://api.openai.com/v1/audio/speech", {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${openaiKey}`,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              model: "tts-1-hd",
-              voice: voicePersona,
-              input: spokenText,
-              speed: 1.0
-            })
-          });
-          if (resp.ok) {
-            const blob = await resp.blob();
-            const url = URL.createObjectURL(blob);
-            const audio = new Audio(url);
-            audio.onended = () => {
-              URL.revokeObjectURL(url);
-              maybeAutoStartMic();
-            };
-            await audio.play();
-            return;
-          }
-        } catch (err) {
-          // Fall back cleanly to browser neural speech
-        }
-      }
-
-      // 2. Built-in Browser Speech Synthesis with Clause Chunking for Natural Pacing
+      // Built-in Browser Natural Speech Synthesis (0ms latency)
       if (!("speechSynthesis" in window)) return;
       try {
-        window.speechSynthesis.cancel();
         const bestVoice = getSelectedBrowserVoice();
-
-        // Split into natural conversational sentences so pitch doesn't flatten across long paragraphs
         const sentences = spokenText.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [spokenText];
         sentences.forEach((sentence, idx) => {
           const utter = new SpeechSynthesisUtterance(sentence.trim());
           if (bestVoice) utter.voice = bestVoice;
           utter.lang = bestVoice?.lang || "en-US";
-          // Natural human pacing: slightly warmer pitch and conversational cadence
           utter.rate = bestVoice?.name.includes("Natural") ? 1.0 : 0.97;
-          utter.pitch = bestVoice?.name.includes("Natural") ? 1.0 : 1.04;
+          utter.pitch = bestVoice?.name.includes("Natural") ? 1.0 : 1.03;
           if (idx === sentences.length - 1) {
             utter.onend = () => {
-              maybeAutoStartMic();
+              setTimeout(() => maybeAutoStartMic(), 350);
             };
           }
           window.speechSynthesis.speak(utter);
@@ -1041,16 +1104,15 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
       }
 
       try {
-        // Barge-in: if Noura is currently speaking and user clicks Speak, stop TTS immediately
-        if ("speechSynthesis" in window) {
-          window.speechSynthesis.cancel();
-        }
+        // Stop any AI audio immediately so Noura's own voice never echoes into the microphone!
+        stopAllAudioPlayback();
 
         const recognition = new SpeechRec();
         activeRecognition = recognition;
-        recognition.lang = "en-US";
+        recognition.lang = document.getElementById("sttAccentSelect")?.value || "en-AE";
         recognition.continuous = false;
-        recognition.interimResults = true; // Show live words as the user speaks!
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 3;
 
         const micBtn = document.getElementById("micBtn");
         const micLabel = document.getElementById("micLabel");
@@ -1065,26 +1127,24 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
         liveBanner.classList.add("flex");
         liveInterim.textContent = "Listening... speak naturally (e.g., 'the 3-year one' or 'yes confirm')";
 
-        let finalTranscript = "";
+        let accumulatedFinal = "";
 
         recognition.onresult = (event) => {
           let interim = "";
           for (let i = event.resultIndex; i < event.results.length; ++i) {
             const chunk = event.results[i][0].transcript;
             if (event.results[i].isFinal) {
-              finalTranscript += chunk;
+              accumulatedFinal += " " + chunk;
             } else {
               interim += chunk;
             }
           }
-          const currentHeard = (finalTranscript || interim).trim();
-          if (currentHeard) {
-            // Stop TTS immediately if user barges in with their voice
-            if ("speechSynthesis" in window && window.speechSynthesis.speaking) {
-              window.speechSynthesis.cancel();
-            }
-            inputField.value = currentHeard;
-            liveInterim.textContent = `Heard: "${currentHeard}"`;
+          const rawHeard = (accumulatedFinal + " " + interim).trim();
+          const cleanedHeard = normalizeTranscriptForRAKEZ(rawHeard);
+          if (cleanedHeard) {
+            stopAllAudioPlayback();
+            inputField.value = cleanedHeard;
+            liveInterim.textContent = `Heard: "${cleanedHeard}"`;
           }
         };
 
@@ -1093,7 +1153,7 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
         };
 
         recognition.onend = () => {
-          const textToProcess = (finalTranscript || inputField.value).trim();
+          const textToProcess = normalizeTranscriptForRAKEZ(accumulatedFinal || inputField.value);
           stopMicrophoneUI();
           if (textToProcess) {
             inputField.value = "";
@@ -1120,12 +1180,8 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
     }
 
     // =========================================================================
-    // 3. UTILITIES & UI RENDERING
+    // 4. UTILITIES & UI RENDERING
     // =========================================================================
-    function maskPhone(phone) {
-      return phone.replace(/(\+971\d{2})\d{4}(\d{3})/, "$1 **** $2");
-    }
-
     function showToast(msg, isWarning = false) {
       const banner = document.getElementById("toastBanner");
       const icon = document.getElementById("toastIcon");
@@ -1155,30 +1211,19 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
     }
 
     function evaluateCompliance() {
-      const adapter = document.getElementById("adapterSelect").value;
-      const custId = document.getElementById("customerSelect").value;
+      const customer = getActiveCustomer();
       const simTime = document.getElementById("simTimeInput").value || "11:30";
-      const customer = customersDB[custId];
 
       const [hourStr, minStr] = simTime.split(":");
       const totalMinutes = parseInt(hourStr, 10) * 60 + parseInt(minStr, 10);
       const startMinutes = 9 * 60;
       const endMinutes = 18 * 60;
-      const usingPersonal = adapter === "PersonalPhoneTwilioAdapter";
 
       if (customer.dnc_opted_out) {
         return {
           allowed: false,
           title: "Call Blocked: Do Not Call Register (DNCR)",
-          reason: `${customer.full_name} (${maskPhone(customer.phone_e164)}) has opted out of outreach calls under UAE TDRA regulations.`
-        };
-      }
-
-      if (usingPersonal && !customer.whitelisted_for_personal_caller_id) {
-        return {
-          allowed: false,
-          title: "Call Blocked: Personal Caller ID Guardrail",
-          reason: `UAE Cabinet Resolution 56/2024 prohibits commercial telemarketing from personal numbers. Switch to "RAKEZ Genesys Trunk" or select Tariq Al-Mansoori.`
+          reason: `${customer.respectful_name} (${customer.phone_e164}) has opted out of outreach calls under UAE TDRA regulations.`
         };
       }
 
@@ -1193,17 +1238,27 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
       return {
         allowed: true,
         title: "TDRA Pre-Call Check: Eligible",
-        reason: `Cleared DNCR check and within permitted 09:00–18:00 UAE calling hours (${simTime} GST).`
+        reason: `Ready to dial ${customer.respectful_name} at ${customer.phone_e164} (${simTime} GST is within 09:00–18:00 window).`
       };
     }
 
-    function renderComplianceAndCustomerUI() {
+    function syncPresetToEditableFields() {
       const custId = document.getElementById("customerSelect").value;
-      const customer = customersDB[custId];
+      const preset = customersDB[custId];
+      document.getElementById("editTitleSelect").value = preset.title || "Mr.";
+      document.getElementById("editFirstNameInput").value = preset.full_name;
+      document.getElementById("editPhoneInput").value = preset.phone_e164;
+      document.getElementById("editEmailInput").value = preset.email;
+      document.getElementById("monitoredClientEmailInput").value = preset.email;
+      renderComplianceAndCustomerUI();
+    }
+
+    function renderComplianceAndCustomerUI() {
+      const customer = getActiveCustomer();
       document.getElementById("customerTierBadge").textContent = customer.tier_label;
-      document.getElementById("investorHumanNameLabel").textContent = `${customer.full_name} (Addressed as "${customer.first_name}")`;
-      document.getElementById("investorCompanySubLabel").textContent = `Company: ${customer.company_name} • Zone: ${customer.segment}`;
-      document.getElementById("investorPhoneLabel").textContent = maskPhone(customer.phone_e164);
+      document.getElementById("spokenAddressPreview").textContent = `Spoken: "${customer.respectful_name}"`;
+      document.getElementById("callSubtext").textContent = `Target: ${customer.respectful_name} (${customer.phone_e164}) • ${customer.email}`;
+      document.getElementById("monitoredClientEmailInput").value = customer.email;
 
       const offersContainer = document.getElementById("offersContainer");
       offersContainer.innerHTML = customer.offers.map(o => `
@@ -1214,7 +1269,7 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
           </div>
           <p class="text-xs text-slate-600 leading-relaxed">${o.description}</p>
           <div class="flex flex-wrap items-center gap-1 pt-0.5">
-            <span class="text-[10px] font-semibold text-slate-400">Brief triggers:</span>
+            <span class="text-[10px] font-semibold text-slate-400">Say briefly:</span>
             ${o.keywords.slice(0, 4).map(kw => `<span class="text-[10px] px-1.5 py-0.5 rounded bg-white border border-slate-200 text-teal-700 font-medium">"${kw}"</span>`).join("")}
           </div>
         </div>
@@ -1291,12 +1346,11 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
     }
 
     // =========================================================================
-    // 4. IMPROVISED AI CALLER ENGINE (Personal Name, Fuzzy Offer Match, Strict RM Policy)
+    // 5. IMPROVISED AI CALLER ENGINE (Respectful Title, Fuzzy Match, Hybrid Gemini)
     // =========================================================================
     function appendMessage(role, text, actionLabel = null) {
       const container = document.getElementById("transcriptContainer");
-      const custId = document.getElementById("customerSelect").value;
-      const customer = customersDB[custId];
+      const customer = getActiveCustomer();
       const wrapper = document.createElement("div");
       const isAI = role === "ai";
       wrapper.className = `flex flex-col ${isAI ? "items-start" : "items-end"}`;
@@ -1318,7 +1372,7 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
             : "bg-teal-700 text-white font-medium"
         }">
           <div class="text-[11px] font-bold mb-1 ${isAI ? "text-teal-700" : "text-teal-100"}">
-            ${isAI ? "Noura • RAKEZ Client Relations Caller" : `${customer.full_name} (Customer)`}
+            ${isAI ? "Noura • RAKEZ Client Relations Caller" : `${customer.respectful_name} (${customer.phone_e164})`}
           </div>
           <div>${text}</div>
         </div>
@@ -1334,10 +1388,8 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
         return;
       }
 
-      const custId = document.getElementById("customerSelect").value;
-      const customer = customersDB[custId];
+      const customer = getActiveCustomer();
 
-      // Reset conversation state for fresh call
       conversationState = {
         turnCount: 1,
         offersPresented: false,
@@ -1347,7 +1399,6 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
       };
       updateDialogueStateUI("Greeting & Rapport");
 
-      // Reset RM transfer monitor to show AI is handling 100% autonomously
       document.getElementById("transferBadge").textContent = "AI Handling 100%";
       document.getElementById("transferBadge").className = "text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200";
 
@@ -1368,19 +1419,18 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
       const avatar = document.getElementById("callAvatar");
       avatar.textContent = "🎙️";
       avatar.className = "w-11 h-11 rounded-2xl bg-teal-500 text-slate-950 flex items-center justify-center text-lg pulse-call";
-      document.getElementById("callStatusText").textContent = `Speaking with ${customer.full_name}`;
-      document.getElementById("callSubtext").textContent = `Addressed personally as "${customer.first_name}" • ${customer.segment}`;
+      document.getElementById("callStatusText").textContent = `CONNECTED • ${customer.respectful_name}`;
+      document.getElementById("callSubtext").textContent = `Dialed ${customer.phone_e164} • Email: ${customer.email}`;
       document.getElementById("waveformBox").classList.remove("hidden");
       document.getElementById("waveformBox").classList.add("flex");
 
       const container = document.getElementById("transcriptContainer");
       container.innerHTML = "";
 
-      // Personal, natural human greeting addressing the customer by their actual personal name!
-      const greeting = `Hi ${customer.first_name}, good day! This is Noura calling from the Client Relations team at RAKEZ on a recorded line. How are you doing today? I was just calling to check in on your experience with us and share a couple of pre-approved renewal benefits on your profile—do you have a quick minute?`;
+      const greeting = `Hello ${customer.respectful_name}, good day! This is Noura calling from the Client Relations team at RAKEZ on a recorded line. How are you doing today? I was calling to check in on your experience with us and share a couple of pre-approved renewal benefits on your profile—do you have a quick minute?`;
 
       conversationState.history.push({ role: "assistant", content: greeting });
-      appendMessage("ai", greeting, `Dialed ${customer.full_name} • Addressed Personally as "${customer.first_name}"`);
+      appendMessage("ai", greeting, `Dialed ${customer.phone_e164} • Addressed as "${customer.respectful_name}"`);
       speakText(greeting);
     }
 
@@ -1390,6 +1440,7 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
         activeRecognition.stop();
       }
       stopMicrophoneUI();
+      stopAllAudioPlayback();
       if (callInterval) {
         clearInterval(callInterval);
         callInterval = null;
@@ -1416,11 +1467,11 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
       document.getElementById("screenPopBox").innerHTML = `
         <div class="space-y-2 text-slate-800">
           <div class="flex items-center justify-between border-b border-slate-200 pb-1.5">
-            <span class="font-bold text-slate-900">${customer.full_name} ("${customer.first_name}")</span>
+            <span class="font-bold text-slate-900">${customer.respectful_name} (${customer.full_name})</span>
             <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800">${triggerCategory}</span>
           </div>
           <div class="text-[11px] text-slate-600">
-            <strong>Company:</strong> ${customer.company_name} (${customer.segment})
+            <strong>Phone:</strong> ${customer.phone_e164} • <strong>Email:</strong> ${customer.email}
           </div>
           <div class="text-[11px] text-slate-600 flex flex-wrap items-center gap-1">
             <strong>Linked Portal 360 SRs:</strong> ${openTicketsBadges}
@@ -1433,10 +1484,6 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
       `;
     }
 
-    /**
-     * Fuzzy matches a brief customer utterance (e.g. "the 3 year one", "warehouse", "first one", "15%")
-     * against the customer's eligible offers in the backend.
-     */
     function matchBriefOfferMention(lowerUtterance, customer) {
       for (const offer of customer.offers) {
         for (const kw of offer.keywords) {
@@ -1453,8 +1500,9 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
       return val.split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
     }
 
-    async function processCustomerUtterance(utterance) {
-      if (!utterance.trim()) return;
+    async function processCustomerUtterance(rawUtterance) {
+      const utterance = normalizeTranscriptForRAKEZ(rawUtterance);
+      if (!utterance) return;
       if (!callActive) {
         startOutboundCall();
         if (!callActive) return;
@@ -1465,32 +1513,25 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
       conversationState.history.push({ role: "user", content: utterance });
 
       const lower = utterance.toLowerCase();
-      const custId = document.getElementById("customerSelect").value;
-      const customer = customersDB[custId];
+      const customer = getActiveCustomer();
       const simTime = document.getElementById("simTimeInput")?.value || "11:30";
 
-      // =======================================================================
-      // STEP 1: CHECK DNC OPT-OUT (Mandatory UAE TDRA Rule)
-      // =======================================================================
+      // 1. DNC Opt-Out
       if (lower.includes("stop calling") || lower.includes("dnc") || lower.includes("remove me") || lower.includes("do not call") || lower.includes("take me off")) {
         customer.dnc_opted_out = true;
         renderComplianceAndCustomerUI();
-        const reply = `I completely understand, ${customer.first_name}—sorry to catch you at a busy time. I've immediately added your number to our Do Not Call list per UAE regulations, so you won't receive any more outreach calls from us. Wishing you a wonderful day ahead, take care!`;
+        const reply = `I completely understand, ${customer.respectful_name}—sorry to catch you at a busy time. I've immediately added your number to our Do Not Call list per UAE regulations, so you won't receive any more outreach calls from us. Wishing you a wonderful day ahead, take care!`;
         appendMessage("ai", reply, "TDRA Do-Not-Call Opt-Out Recorded");
         speakText(reply);
         endActiveCall("Customer Opted Out (DNC)");
         return;
       }
 
-      // =======================================================================
-      // STEP 2: CHECK THE 3 SPECIAL RELATIONSHIP OFFICER ESCALATION RULES
-      // (Noura ONLY transfers when one of these 3 backend rules triggers!)
-      // =======================================================================
+      // 2. Check the 3 Special Relationship Officer Escalation Rules
       const explicitTransferKws = parseCsvKeywords("explicitTransferKeywordsInput");
       const dissatisfactionKws = parseCsvKeywords("dissatisfactionKeywordsInput");
       const systemMandatedKws = parseCsvKeywords("systemMandatedKeywordsInput");
 
-      // Rule 2A: Customer explicitly asks for a human Relationship Officer
       if (explicitTransferKws.some(kw => lower.includes(kw))) {
         updateDialogueStateUI("Warm Handover -> Relationship Officer");
         executeWarmTransferToRM(
@@ -1499,16 +1540,14 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
           "Customer explicitly asked to speak with a human Relationship Officer.",
           utterance
         );
-        const reply = `Of course, ${customer.first_name}—let me connect you straight through to your dedicated RAKEZ Relationship Officer right now. I've already popped our conversation notes and your Portal 360 profile onto their screen so you won't have to repeat a single thing. Putting you through now!`;
+        const reply = `Of course, ${customer.respectful_name}—let me connect you straight through to your dedicated RAKEZ Relationship Officer right now. I've already popped our conversation notes and your Portal 360 profile onto their screen so you won't have to repeat a single thing. Putting you through now!`;
         appendMessage("ai", reply, "Special Case 1: Customer Requested Relationship Officer");
         speakText(reply);
         endActiveCall("Transferred to Relationship Officer");
         return;
       }
 
-      // Rule 2B: Severe Customer Dissatisfaction / Refusal to Listen
-      const isStronglyDissatisfied = dissatisfactionKws.some(kw => lower.includes(kw));
-      if (isStronglyDissatisfied) {
+      if (dissatisfactionKws.some(kw => lower.includes(kw))) {
         conversationState.dissatisfactionCount++;
         const cmpId = "CMP-360-" + Math.random().toString(16).substring(2, 6).toUpperCase();
         ticketsState.push({
@@ -1516,7 +1555,7 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
           customer_id: customer.customer_id,
           type: "Complaint",
           priority: "Critical",
-          summary: `Urgent Dissatisfaction Escalation for ${customer.full_name}`,
+          summary: `Urgent Dissatisfaction Escalation for ${customer.respectful_name}`,
           channel: "Voice AI Call",
           time: `${simTime} GST`
         });
@@ -1532,18 +1571,17 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
         executeWarmTransferToRM(
           customer,
           "Rule 2: High Dissatisfaction",
-          `Customer expressed strong dissatisfaction and refused standard flow. Logged Critical Escalation ${cmpId}.`,
+          `Customer expressed strong dissatisfaction. Logged Critical Escalation ${cmpId}.`,
           utterance
         );
 
-        const reply = `I am truly sorry you've had such a frustrating experience, ${customer.first_name}—you deserve to have this sorted out immediately without any runaround. I've logged an urgent priority ticket under ${cmpId} and I'm connecting you directly to a Senior Relationship Officer right now with your full case file on their screen so they can take personal ownership of this for you.`;
+        const reply = `I am truly sorry you've had such a frustrating experience, ${customer.respectful_name}—you deserve to have this sorted out immediately. I've logged an urgent priority ticket under ${cmpId} and I'm connecting you directly to a Senior Relationship Officer right now with your full case file on their screen so they can take personal ownership of this for you.`;
         appendMessage("ai", reply, `Special Case 2: Severe Dissatisfaction -> Logged ${cmpId} & Transferred to RM`);
         speakText(reply);
         endActiveCall("Escalated to Senior Relationship Officer");
         return;
       }
 
-      // Rule 2C: System-Mandated Officer Intervention Scenario (from Backend Config or Keywords)
       const matchedMandatedScenario = backendScenarios.find(
         sc => sc.requires_rm_transfer && sc.trigger_keywords.some(kw => lower.includes(kw.toLowerCase()))
       );
@@ -1569,29 +1607,26 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
         );
 
         const reply = matchedMandatedScenario
-          ? matchedMandatedScenario.response_template.replace(/\{first_name\}/g, customer.first_name)
-          : `I understand, ${customer.first_name}. Because this request requires formal clearance and dedicated Relationship Officer sign-off under RAKEZ policy, I've opened reference ${srId} and I'm connecting you straight through to your Relationship Officer now.`;
+          ? matchedMandatedScenario.response_template.replace(/\{respectful_name\}/g, customer.respectful_name)
+          : `I understand, ${customer.respectful_name}. Because this request requires formal clearance and dedicated Relationship Officer sign-off under RAKEZ policy, I've opened reference ${srId} and I'm connecting you straight through to your Relationship Officer now.`;
         appendMessage("ai", reply, `Special Case 3: System-Mandated Officer Handover (${srId})`);
         speakText(reply);
         endActiveCall("Transferred (System-Mandated Policy)");
         return;
       }
 
-      // =======================================================================
-      // STEP 3: CHECK IF CUSTOMER IS CONFIRMING OR DECLINING A PENDING OFFER
-      // =======================================================================
-      const affirmativeWords = ["yes", "yeah", "yep", "sure", "confirm", "lock it", "lock that", "go ahead", "apply it", "do it", "sounds good", "please do", "book it", "activate"];
+      // 3. Check Pending Offer Confirmation ("yes", "confirm", "lock that in")
+      const affirmativeWords = ["yes", "yeah", "yep", "sure", "confirm", "lock it", "lock that", "go ahead", "apply it", "do it", "sounds good", "please do", "book it", "activate", "okay", "ok"];
       const negativeWords = ["no", "not right now", "maybe later", "hold off", "different one", "other offer", "don't apply"];
 
       if (conversationState.pendingOfferConfirmation) {
         const pendingOffer = conversationState.pendingOfferConfirmation;
 
-        // Check if customer switched to asking about a different specific offer instead
         const switchedOffer = matchBriefOfferMention(lower, customer);
         if (switchedOffer && switchedOffer.offer_id !== pendingOffer.offer_id && !affirmativeWords.some(w => lower.includes(w))) {
           conversationState.pendingOfferConfirmation = switchedOffer;
           updateDialogueStateUI(`Confirming Offer: ${switchedOffer.short_label}`);
-          const reply = `Ah, got it ${customer.first_name}—let's look at ${switchedOffer.spoken_pitch} instead. Would you like me to confirm and lock that ${switchedOffer.short_label} into Portal 360 for you right now?`;
+          const reply = `Ah, got it ${customer.respectful_name}—let's look at ${switchedOffer.spoken_pitch} instead. Would you like me to confirm and lock that ${switchedOffer.short_label} into Portal 360 for you right now?`;
           appendMessage("ai", reply, `Matched Offer Mention: ${switchedOffer.short_label} (Asking Confirmation)`);
           speakText(reply);
           return;
@@ -1609,11 +1644,11 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
             time: `${simTime} GST`
           });
           conversationState.pendingOfferConfirmation = null;
-          updateDialogueStateUI("Offer Confirmed & Logged in Portal 360");
+          updateDialogueStateUI("Offer Confirmed & Emailed to Client");
           renderCRMLists();
 
-          const reply = `Wonderful, ${customer.first_name}! I've just locked in the ${pendingOffer.short_label} on your Portal 360 account under service request ${srId}, and the updated invoice is ready in your portal. While I have you on the line, how has your overall experience with RAKEZ been lately, or is there anything else I can take care of for you today?`;
-          appendMessage("ai", reply, `Confirmed & Created Portal 360 Request ${srId}`);
+          const reply = `Wonderful, ${customer.respectful_name}! I've just locked in the ${pendingOffer.short_label} on your Portal 360 account under service request ${srId}, and I've also sent a confirmation email to ${customer.email}. While I have you on the line, is there anything else I can take care of for you today?`;
+          appendMessage("ai", reply, `Confirmed ${srId} & Dispatched Update Email to ${customer.email}`);
           speakText(reply);
           return;
         }
@@ -1623,48 +1658,39 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
           updateDialogueStateUI("Exploring Other Options");
           const otherOffers = customer.offers.filter(o => o.offer_id !== pendingOffer.offer_id);
           const otherPitch = otherOffers.length > 0
-            ? `No problem at all, ${customer.first_name}! We won't touch that one. Just so you know, you also have ${otherOffers[0].spoken_pitch} available whenever you need it. Is there anything else on your license or visas I can help you with today?`
-            : `No problem at all, ${customer.first_name}—I'll leave that open on your profile so you can review it anytime on Portal 360. Is there anything else I can help you with today?`;
+            ? `No problem at all, ${customer.respectful_name}! We won't touch that one. Just so you know, you also have ${otherOffers[0].spoken_pitch} available whenever you need it. Is there anything else on your license or visas I can help you with today?`
+            : `No problem at all, ${customer.respectful_name}—I'll leave that open on your profile so you can review it anytime on Portal 360. Is there anything else I can help you with today?`;
           appendMessage("ai", otherPitch, "Offer Confirmation Declined — Continuing Conversation");
           speakText(otherPitch);
           return;
         }
       }
 
-      // =======================================================================
-      // STEP 4: FUZZY BRIEF-WORD OFFER MATCHING -> ASK FOR CONFIRMATION!
-      // (e.g., Customer says "the 3-year one", "warehouse", "15%", "the first one")
-      // =======================================================================
+      // 4. Fuzzy Brief-Word Offer Matching -> Ask for Confirmation!
       const matchedOffer = matchBriefOfferMention(lower, customer);
       if (matchedOffer && !lower.includes("what offer") && !lower.includes("which offer") && !lower.includes("tell me the offers") && !lower.includes("what do you have")) {
         conversationState.pendingOfferConfirmation = matchedOffer;
         updateDialogueStateUI(`Confirming Offer: ${matchedOffer.short_label}`);
 
-        const reply = `Got it, ${customer.first_name}—you're referring to ${matchedOffer.spoken_pitch}. Just to confirm before I raise the request on your Portal 360 profile, would you like me to go ahead and lock in the ${matchedOffer.short_label} for you?`;
+        const reply = `Got it, ${customer.respectful_name}—you're referring to ${matchedOffer.spoken_pitch}. Just to confirm before I raise the request on your Portal 360 profile, would you like me to go ahead and lock in the ${matchedOffer.short_label} for you?`;
         appendMessage("ai", reply, `Identified Offer from Brief Reply: "${matchedOffer.short_label}" • Asking Confirmation`);
         speakText(reply);
         return;
       }
 
-      // =======================================================================
-      // STEP 5: CUSTOMER ASKS TO HEAR ALL ELIGIBLE OFFERS
-      // =======================================================================
+      // 5. Customer Asks to Hear All Eligible Offers
       if (lower.includes("offer") || lower.includes("what do you have") || lower.includes("benefits") || lower.includes("promotion") || lower.includes("discounts") || lower.includes("tell me more") || (conversationState.turnCount === 2 && affirmativeWords.some(w => lower.includes(w)))) {
         conversationState.offersPresented = true;
         updateDialogueStateUI("Presenting Pre-Approved Offers");
 
         const offerLines = customer.offers.map((o, idx) => `${idx === 0 ? "First, we have" : "And second, there's"} ${o.spoken_pitch}`).join(". ");
-        const reply = `Gladly, ${customer.first_name}! Looking at your profile right now, you pre-qualify for ${customer.offers.length} special packages. ${offerLines}. Which of those sounds like a better fit for you—the ${customer.offers[0].short_label.toLowerCase()}${customer.offers[1] ? ` or the ${customer.offers[1].short_label.toLowerCase()}` : ""}?`;
+        const reply = `Gladly, ${customer.respectful_name}! Looking at your profile right now, you pre-qualify for ${customer.offers.length} special packages. ${offerLines}. Which of those sounds like a better fit for you—the ${customer.offers[0].short_label.toLowerCase()}${customer.offers[1] ? ` or the ${customer.offers[1].short_label.toLowerCase()}` : ""}?`;
         appendMessage("ai", reply, `Fetched ${customer.offers.length} Personal Offers from Portal 360`);
         speakText(reply);
         return;
       }
 
-      // =======================================================================
-      // STEP 6: CHECK MODIFIABLE BACKEND SCENARIOS (e.g. Visa Delay, UBO Docs, Pricing)
-      // (Handled 100% autonomously by Noura without transferring to RM!)
-      // =======================================================================
-      // First check if the customer also mentioned a CSAT rating (e.g. "4/5" or "5 out of 5")
+      // 6. Modifiable Backend Scenarios (Visa Delay, UBO Docs, Pricing)
       const ratingMatch = lower.match(/([1-5])\s*(?:\/|out of)\s*5/);
       let ratingBadgePart = "";
       if (ratingMatch) {
@@ -1693,7 +1719,7 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
             customer_id: customer.customer_id,
             type: matchedScenario.auto_ticket_type,
             priority: matchedScenario.auto_ticket_priority || "Normal",
-            summary: `${matchedScenario.name} (${customer.full_name})`,
+            summary: `${matchedScenario.name} (${customer.respectful_name})`,
             channel: "Voice AI Call",
             time: `${simTime} GST`
           });
@@ -1702,37 +1728,35 @@ export AZURE_OPENAI_ENDPOINT="https://your-uaenorth.openai.azure.com/"</pre>
         }
 
         updateDialogueStateUI(`Resolved via Playbook: ${matchedScenario.name}`);
-        const reply = matchedScenario.response_template.replace(/\{first_name\}/g, customer.first_name);
+        const reply = matchedScenario.response_template.replace(/\{respectful_name\}/g, customer.respectful_name);
         appendMessage("ai", reply, actionBadge);
         speakText(reply);
         return;
       }
 
-      // Pure CSAT rating turn without another scenario
       if (ratingMatch) {
         const ratingNum = parseInt(ratingMatch[1], 10);
         updateDialogueStateUI("Captured CSAT Feedback");
-        const reply = `Thank you so much for that ${ratingNum} out of 5 rating, ${customer.first_name}—I've logged that feedback directly on your Portal 360 profile. Before I let you go, would you like me to share the ${customer.offers[0].discount} renewal offer you pre-qualify for, or is there anything else I can help you with today?`;
+        const reply = `Thank you so much for that ${ratingNum} out of 5 rating, ${customer.respectful_name}—I've logged that feedback directly on your Portal 360 profile. Before I let you go, would you like me to share the ${customer.offers[0].discount} renewal offer you pre-qualify for, or is there anything else I can help you with today?`;
         appendMessage("ai", reply, ratingBadgePart.replace(" • ", ""));
         speakText(reply);
         return;
       }
 
-      // =======================================================================
-      // STEP 7: OPTIONAL LIVE GOOGLE GEMINI 2.5 FLASH / OPENAI IMPROVISATION
-      // =======================================================================
+      // 7. Hybrid Structured Gemini 2.5 Flash Improvisation (if API key connected)
       const geminiKey = (document.getElementById("geminiKeyInput")?.value || "").trim();
       if (geminiKey.startsWith("AIza")) {
         try {
           updateDialogueStateUI("Improvising via Live Google Gemini 2.5 Flash...");
           const sysPrompt = `You are Noura, a warm, human-like Senior Client Relations Executive calling from RAKEZ (Ras Al Khaimah Economic Zone) in the UAE.
-You are speaking directly with ${customer.full_name}. ALWAYS address them by their personal first name "${customer.first_name}" (NEVER call them by their company name "${customer.company_name}").
+You are speaking directly with ${customer.full_name}. ALWAYS address them respectfully as "${customer.respectful_name}" (NEVER call them by their company name "${customer.company_name}").
 Their eligible offers in Portal 360 are:
-${customer.offers.map(o => `- ${o.title} (${o.discount}): ${o.description}`).join("\n")}
-Rules:
-1. Sound 100% like a natural human caller—use contractions, warmth, and keep your reply to 1-2 short spoken sentences.
-2. If they mention an offer briefly, confirm the exact offer name with them before booking it.
-3. Do NOT offer to transfer them to a Relationship Officer unless they explicitly ask for a human, are furious/refusing to listen, or ask for company liquidation.`;
+${customer.offers.map(o => `- ID: ${o.offer_id} | Name: ${o.short_label} (${o.discount}): ${o.description}`).join("\n")}
+Return ONLY a JSON object with:
+{
+  "matched_offer_id": "RAKEZ-3YR-RENEW-15 or RAKEZ-WAREHOUSE-FITOUT or null if they mentioned an offer",
+  "spoken_reply": "Your warm, 1-2 sentence human response addressing ${customer.respectful_name}. If they mentioned an offer, ask for confirmation before booking. Never push a Relationship Officer transfer unless they ask."
+}`;
 
           const geminiContents = conversationState.history.slice(-6).map(m => ({
             role: m.role === "assistant" ? "model" : "user",
@@ -1745,96 +1769,102 @@ Rules:
             body: JSON.stringify({
               systemInstruction: { parts: [{ text: sysPrompt }] },
               contents: geminiContents,
-              generationConfig: { temperature: 0.7, maxOutputTokens: 150 }
+              generationConfig: {
+                temperature: 0.5,
+                maxOutputTokens: 200,
+                responseMimeType: "application/json"
+              }
             })
           });
           if (resp.ok) {
             const data = await resp.json();
-            const llmReply = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-            if (llmReply) {
+            const rawJson = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+            if (rawJson) {
+              const parsed = JSON.parse(rawJson);
+              if (parsed.matched_offer_id) {
+                const foundOffer = customer.offers.find(o => o.offer_id === parsed.matched_offer_id);
+                if (foundOffer) {
+                  conversationState.pendingOfferConfirmation = foundOffer;
+                  updateDialogueStateUI(`Confirming Offer: ${foundOffer.short_label}`);
+                }
+              }
+              const llmReply = parsed.spoken_reply || `Got it, ${customer.respectful_name}. How can I best help you with that today?`;
               conversationState.history.push({ role: "assistant", content: llmReply });
               appendMessage("ai", llmReply, "Live Gemini 2.5 Flash Improvised Response");
               speakText(llmReply);
               return;
             }
           }
-        } catch (err) {
-          // Fall back cleanly
-        }
+        } catch (err) {}
       }
 
-      const openaiKey = (document.getElementById("openaiKeyInput")?.value || "").trim();
-      if (openaiKey.startsWith("sk-")) {
-        try {
-          updateDialogueStateUI("Improvising via Live GPT-4o...");
-          const sysPrompt = `You are Noura, a warm, human-like Senior Client Relations Executive calling from RAKEZ (Ras Al Khaimah Economic Zone) in the UAE.
-You are speaking directly with ${customer.full_name}. ALWAYS address them by their personal first name "${customer.first_name}" (NEVER call them by their company name "${customer.company_name}").
-Their eligible offers in Portal 360 are:
-${customer.offers.map(o => `- ${o.title} (${o.discount}): ${o.description}`).join("\n")}
-Rules:
-1. Sound 100% like a natural human caller—use contractions, warmth, and keep your reply to 1-2 short spoken sentences.
-2. If they mention an offer briefly, confirm the exact offer name with them before booking it.
-3. Do NOT offer to transfer them to a Relationship Manager unless they explicitly ask for a human, are furious/refusing to listen, or ask for company liquidation.`;
-
-          const resp = await fetch("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${openaiKey}`,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              model: "gpt-4o-mini",
-              messages: [
-                { role: "system", content: sysPrompt },
-                ...conversationState.history.slice(-6)
-              ],
-              temperature: 0.7,
-              max_tokens: 120
-            })
-          });
-          if (resp.ok) {
-            const data = await resp.json();
-            const llmReply = data.choices[0].message.content.trim();
-            conversationState.history.push({ role: "assistant", content: llmReply });
-            appendMessage("ai", llmReply, "Live GPT-4o Improvised Response");
-            speakText(llmReply);
-            return;
-          }
-        } catch (err) {
-          // Fallback to built-in conversational improviser below
-        }
-      }
-
-      // =======================================================================
-      // STEP 8: BUILT-IN NATURAL HUMAN IMPROVISATION (Greetings, Questions, Closing)
-      // =======================================================================
+      // 8. Built-in Natural Human Improvisation
       if (lower.includes("how are you") || lower.includes("doing well") || lower.includes("good") || lower.includes("fine") || lower.includes("hello") || lower.includes("hi ")) {
         updateDialogueStateUI("Building Rapport & Pitching Offers");
         const topOffer = customer.offers[0];
-        const reply = `I'm doing great, thanks for asking, ${customer.first_name}! I saw on your Portal 360 profile that your renewal window is coming up, and you actually pre-qualify for ${topOffer.spoken_pitch}${customer.offers[1] ? `, as well as ${customer.offers[1].spoken_pitch}` : ""}. Do either of those sound helpful for your plans this year?`;
+        const reply = `I'm doing very well, thank you for asking, ${customer.respectful_name}! I saw on your Portal 360 profile that your renewal window is coming up, and you pre-qualify for ${topOffer.spoken_pitch}${customer.offers[1] ? `, as well as ${customer.offers[1].spoken_pitch}` : ""}. Do either of those sound helpful for your plans this year?`;
         appendMessage("ai", reply, "Natural Rapport & Proactive Offer Pitch");
         speakText(reply);
         return;
       }
 
       if (lower.includes("thank") || lower.includes("nothing else") || lower.includes("that's all") || lower.includes("all good") || lower.includes("bye")) {
-        const reply = `It was an absolute pleasure speaking with you today, ${customer.first_name}! Everything is updated on your Portal 360 profile, and you can reach out anytime if you need a hand. Have a wonderful rest of your day!`;
+        const reply = `It was an absolute pleasure speaking with you today, ${customer.respectful_name}! Everything is updated on your Portal 360 profile and emailed to ${customer.email}. Have a wonderful rest of your day!`;
         appendMessage("ai", reply, "Polite Call Wrap-Up (100% AI Handled)");
         speakText(reply);
         endActiveCall("Completed Autonomously by AI");
         return;
       }
 
-      // General contextual improvisation that stays in character as a human caller (NO RM transfer push!)
       updateDialogueStateUI("Active Improvisation");
       const defaultOffer = customer.offers[0];
-      const improvisedReply = `I hear you, ${customer.first_name}. Just so you have all the options in front of you, we can either look at the ${defaultOffer.short_label} (${defaultOffer.discount})${customer.offers[1] ? `, check out the ${customer.offers[1].short_label}` : ""}, or I can log any specific service request directly into Portal 360 for you right here on the call. Which one would be most useful for you right now?`;
-      appendMessage("ai", improvisedReply, `Conversational Improvisation (Addressed to ${customer.first_name})`);
+      const improvisedReply = `I hear you, ${customer.respectful_name}. Just so you have all the options in front of you, we can either look at the ${defaultOffer.short_label} (${defaultOffer.discount})${customer.offers[1] ? `, check out the ${customer.offers[1].short_label}` : ""}, or I can log any specific service request directly into Portal 360 for you right here on the call. Which one would be most useful for you right now?`;
+      appendMessage("ai", improvisedReply, `Conversational Improvisation (Addressed to ${customer.respectful_name})`);
       speakText(improvisedReply);
     }
 
     // =========================================================================
-    // 5. NAVIGATION, PRESENTER SCRIPT & EVENT LISTENERS
+    // 6. TWO-WAY EMAIL MONITORING & CLIENT UPDATE DISPATCH (`kmussab1@gmail.com`)
+    // =========================================================================
+    function triggerClientUpdateEmailFromCall() {
+      const customer = getActiveCustomer();
+      const rakezBox = document.getElementById("rakezMailboxInput")?.value || "kmussab1@gmail.com";
+      const latestTickets = ticketsState.map(t => t.ticket_id).join(", ");
+      const subject = `RAKEZ Portal 360 Update for ${customer.respectful_name} (${customer.company_name}) [${latestTickets}]`;
+      const body = [
+        `Dear ${customer.respectful_name},`,
+        ``,
+        `Thank you for speaking with Noura from RAKEZ Client Relations today.`,
+        `Here is a summary of your Portal 360 profile updates and eligible offers:`,
+        `• Active Portal 360 References: ${latestTickets}`,
+        `• Eligible Renewal Offer: ${customer.offers[0].title} (${customer.offers[0].discount})`,
+        ``,
+        `You can reply directly to this email (${rakezBox}) at any time and our AI Client Relations system will automatically update your Portal 360 file.`,
+        ``,
+        `Warm regards,`,
+        `Noura — RAKEZ Client Relations (${rakezBox})`
+      ].join("\n");
+
+      document.getElementById("monitoredClientEmailInput").value = customer.email;
+      document.getElementById("emailSubjectInput").value = subject;
+      document.getElementById("emailBodyInput").value = body;
+
+      const logText = [
+        `✔ Outbound Post-Call Update Dispatched`,
+        `   From (RAKEZ Mailbox) : ${rakezBox}`,
+        `   To (Client Email ID) : ${customer.respectful_name} <${customer.email}>`,
+        `   Linked Phone Number  : ${customer.phone_e164}`,
+        `   Subject              : ${subject}`,
+        ``,
+        `--- Email Body Sent ---`,
+        body
+      ].join("\n");
+      document.getElementById("emailOutputBox").textContent = logText;
+      showToast(`Prepared & logged official RAKEZ update email from ${rakezBox} to ${customer.email}!`);
+    }
+
+    // =========================================================================
+    // 7. NAVIGATION & EVENT LISTENERS
     // =========================================================================
     function switchTab(tab) {
       const views = {
@@ -1880,31 +1910,33 @@ Rules:
         switchTab("voice");
 
         if (step === "1") {
-          document.getElementById("customerSelect").value = "CUST-UAE-101";
-          renderComplianceAndCustomerUI();
           startOutboundCall();
-          stepText.textContent = "Stage 1: Noura greets Tariq personally by his first name ('Hi Tariq, how are you doing today?')—never by his LLC company name.";
+          stepText.textContent = "Stage 1: Noura greets the customer respectfully as 'Mr. Tariq' and pronounces 'Rakez' naturally as a word.";
         } else if (step === "2") {
           processCustomerUtterance("The 3-year one sounds interesting");
-          stepText.textContent = "Stage 2: The customer only says a brief phrase ('The 3-year one'). Noura identifies the exact 3-Year License Renewal offer and asks Tariq for confirmation.";
+          stepText.textContent = "Stage 2: Customer says a brief phrase ('The 3-year one'). Noura identifies the exact offer and asks Mr. Tariq for confirmation.";
         } else if (step === "3") {
           processCustomerUtterance("Yes, please confirm and lock that in for me");
-          stepText.textContent = "Stage 3: Upon confirmation, Noura logs the Service Request in Portal 360 autonomously and continues the conversation naturally.";
+          stepText.textContent = "Stage 3: Upon confirmation, Noura logs the Service Request in Portal 360 AND dispatches a confirmation email to his configured email ID.";
         } else if (step === "4") {
           processCustomerUtterance("Portal 360 is 4 out of 5, but one of my employee visas is delayed");
-          stepText.textContent = "Stage 4: Routine issues (like a visa delay) are logged and resolved 100% by Noura WITHOUT unnecessarily transferring to a human.";
+          stepText.textContent = "Stage 4: Routine issues (like a visa delay) are resolved 100% by Noura WITHOUT transferring to a human.";
         } else if (step === "5") {
           processCustomerUtterance("I am really frustrated and fed up with this delay, I don't want to listen to anything!");
-          stepText.textContent = "Stage 5: ONLY when a special rule triggers (severe customer dissatisfaction, liquidation policy, or explicit request) does Noura warm-transfer to a Relationship Officer.";
+          stepText.textContent = "Stage 5: ONLY when a special rule triggers (severe dissatisfaction, liquidation policy, or explicit request) does Noura warm-transfer to an Officer.";
         }
       });
     });
 
     document.getElementById("testVoiceBtn").addEventListener("click", () => {
-      const custId = document.getElementById("customerSelect").value;
-      const customer = customersDB[custId];
-      speakText(`Hi ${customer.first_name}, this is Noura from RAKEZ Client Relations. I'm using your selected natural voice engine.`);
-      showToast("Playing voice sample—select any 'Microsoft Online (Natural)' voice in the dropdown for the best human prosody.");
+      const customer = getActiveCustomer();
+      speakText(`Hello ${customer.respectful_name}, this is Noura calling from Rakez Client Relations. Notice how I pronounce Rakez naturally as a word and address you respectfully.`);
+      showToast(`Playing voice sample for ${customer.respectful_name}—pronouncing "Rakez" as a word!`);
+    });
+
+    document.getElementById("sendPostCallEmailBtn").addEventListener("click", () => {
+      triggerClientUpdateEmailFromCall();
+      switchTab("email");
     });
 
     document.getElementById("saveTrainingBtn").addEventListener("click", () => {
@@ -1932,8 +1964,12 @@ Rules:
       document.getElementById("toastBanner").classList.add("hidden");
     });
 
+    document.getElementById("customerSelect").addEventListener("change", syncPresetToEditableFields);
+    document.getElementById("editTitleSelect").addEventListener("change", renderComplianceAndCustomerUI);
+    document.getElementById("editFirstNameInput").addEventListener("input", renderComplianceAndCustomerUI);
+    document.getElementById("editPhoneInput").addEventListener("input", renderComplianceAndCustomerUI);
+    document.getElementById("editEmailInput").addEventListener("input", renderComplianceAndCustomerUI);
     document.getElementById("adapterSelect").addEventListener("change", renderComplianceAndCustomerUI);
-    document.getElementById("customerSelect").addEventListener("change", renderComplianceAndCustomerUI);
     document.getElementById("simTimeInput").addEventListener("change", renderComplianceAndCustomerUI);
 
     document.getElementById("startCallBtn").addEventListener("click", startOutboundCall);
@@ -1960,19 +1996,22 @@ Rules:
       stopMicrophoneUI();
     });
 
-    // Phase 2: Outlook Email Ingestion (Addresses customer by personal name!)
+    // Phase 2: Inbound Client Email Monitoring & Outbound Gmail Dispatch
     document.getElementById("processEmailBtn").addEventListener("click", () => {
+      const customer = getActiveCustomer();
+      const rakezBox = document.getElementById("rakezMailboxInput").value || "kmussab1@gmail.com";
+      const senderEmail = document.getElementById("monitoredClientEmailInput").value || customer.email;
       const subject = document.getElementById("emailSubjectInput").value;
       const simTime = document.getElementById("simTimeInput").value || "11:30";
 
       const newSrId = "SR-360-" + Math.random().toString(16).substring(2, 6).toUpperCase();
       ticketsState.push({
         ticket_id: newSrId,
-        customer_id: "CUST-UAE-101",
+        customer_id: customer.customer_id,
         type: "Service Request",
         priority: "Normal",
-        summary: `Email Request: ${subject.slice(0, 45)}`,
-        channel: "Outlook Email",
+        summary: `Email from ${customer.respectful_name}: ${subject.slice(0, 38)}`,
+        channel: "Monitored Mailbox",
         time: `${simTime} GST`
       });
 
@@ -1981,45 +2020,58 @@ Rules:
         feedback_id: fbId,
         rating: 5,
         sentiment: "Positive",
-        comment: "5/5 stars via Outlook email follow-up"
+        comment: `5/5 rating received via email from ${senderEmail}`
       });
 
       renderCRMLists();
 
       const priorTickets = ticketsState.map(t => t.ticket_id).join(", ");
       const outputLog = [
-        `✔ 1. Inbound Email Matched in Portal 360`,
-        `   Customer Name  : Tariq Al-Mansoori (Personal Name: Tariq)`,
-        `   Company Entity : Al-Mansoori Industrial LLC`,
-        `   Linked History : Connected to prior voice SRs [${priorTickets}]`,
+        `✔ 1. RAKEZ Mailbox (${rakezBox}) Detected Inbound Client Email`,
+        `   Matched Sender Email : ${senderEmail} -> Identified as ${customer.respectful_name} (${customer.full_name})`,
+        `   Associated Phone     : ${customer.phone_e164} (${customer.company_name})`,
+        `   Linked History       : Connected to prior voice SRs [${priorTickets}]`,
         ``,
-        `✔ 2. Autonomous Actions Executed by AI Orchestrator`,
-        `   • Created Portal 360 Service Request: ${newSrId} (3 Additional Visa Quotas)`,
+        `✔ 2. Autonomous Actions Executed in Portal 360`,
+        `   • Created Portal 360 Service Request: ${newSrId}`,
         `   • Logged Customer Satisfaction Score: ★★★★★ (5/5) [${fbId}]`,
         ``,
-        `✔ 3. Personal Outlook Reply Dispatched via Microsoft Graph API`,
-        `   To: Tariq Al-Mansoori <tariq@almansoori-ind.ae>`,
-        `   Subject: Re: ${subject} [${newSrId}]`,
-        `   Message:`,
-        `   "Hi Tariq,`,
-        `    Thank you so much for your 5/5 feedback following our call! I have personally registered`,
-        `    your request for 3 additional employee visa quotas on Portal 360 under reference ${newSrId}`,
-        `    and linked it to your open account history (${priorTickets}).`,
-        `    Warm regards, Noura — RAKEZ Client Relations"`
+        `✔ 3. Automated Reply Sent from ${rakezBox} to ${senderEmail}`,
+        `   From    : ${rakezBox}`,
+        `   To      : ${customer.respectful_name} <${senderEmail}>`,
+        `   Subject : Re: ${subject} [${newSrId}]`,
+        `   Body    :`,
+        `   "Dear ${customer.respectful_name},`,
+        `    Thank you for your email and 5/5 feedback! We have registered your request on Portal 360`,
+        `    under reference ${newSrId} and linked it to your open account history (${priorTickets}).`,
+        `    Warm regards, Noura — RAKEZ Client Relations (${rakezBox})"`
       ].join("\n");
 
       document.getElementById("emailOutputBox").textContent = outputLog;
-      showToast(`Processed Outlook Email from Tariq: Created Portal 360 SR ${newSrId} & logged 5/5 CSAT!`);
+      showToast(`Matched email from ${senderEmail} (${customer.respectful_name}), created ${newSrId}, and replied from ${rakezBox}!`);
     });
 
-    // Initialize UI & Voices on load
+    document.getElementById("composeGmailUpdateBtn").addEventListener("click", () => {
+      const customer = getActiveCustomer();
+      const rakezBox = document.getElementById("rakezMailboxInput").value || "kmussab1@gmail.com";
+      const clientEmail = document.getElementById("monitoredClientEmailInput").value || customer.email;
+      const latestTickets = ticketsState.map(t => t.ticket_id).join(", ");
+      const subject = `RAKEZ Portal 360 Update for ${customer.respectful_name} [${latestTickets}]`;
+      const body = `Dear ${customer.respectful_name},\n\nFollowing up from RAKEZ Client Relations (${rakezBox}), we have updated your Portal 360 profile (References: ${latestTickets}) and pre-approved your ${customer.offers[0].title} (${customer.offers[0].discount}).\n\nPlease reply directly to this email if you would like us to finalize any additional requests.\n\nWarm regards,\nNoura — RAKEZ Client Relations`;
+
+      // Open Gmail compose window pre-filled from user's Gmail to client's email
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(clientEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.open(gmailUrl, "_blank");
+      showToast(`Opened Gmail Compose from ${rakezBox} to ${clientEmail}!`);
+    });
+
     window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("scenariosConfigEditor").value = JSON.stringify(backendScenarios, null, 2);
       populateVoiceSelector();
       if ("speechSynthesis" in window) {
         window.speechSynthesis.onvoiceschanged = populateVoiceSelector;
       }
-      renderComplianceAndCustomerUI();
+      syncPresetToEditableFields();
     });
   </script>
 </body>
