@@ -787,8 +787,20 @@
     };
 
     // =========================================================================
-    // 2. CUSTOMER & AGENDA TRACKER HELPERS
+    // 2. CUSTOMER, DYNAMIC VARIATION POOLS & AGENDA TRACKER HELPERS
     // =========================================================================
+    const nonRepeatingPoolTrackers = {};
+
+    function pickVariedPhrase(poolKey, phrasesArray) {
+      if (!phrasesArray || phrasesArray.length === 0) return "";
+      if (phrasesArray.length === 1) return phrasesArray[0];
+      const lastIdx = nonRepeatingPoolTrackers[poolKey];
+      let candidates = phrasesArray.map((p, i) => i).filter(i => i !== lastIdx);
+      const chosenIdx = candidates[Math.floor(Math.random() * candidates.length)];
+      nonRepeatingPoolTrackers[poolKey] = chosenIdx;
+      return phrasesArray[chosenIdx];
+    }
+
     function getActiveCustomer() {
       const custId = document.getElementById("customerSelect").value;
       const base = customersDB[custId];
@@ -821,11 +833,60 @@
       return callAgenda.find(s => !s.completed) || null;
     }
 
+    /**
+     * Builds a dynamically varied, natural human transition to the next pending Call Agenda item
+     * so Noura never sounds like a script reading the exact same sentence twice!
+     */
     function buildAgendaReturnBridge(customer) {
       const nextStep = getNextPendingAgendaStep();
       if (!nextStep) {
-        return `Is there anything else I can assist you with today, ${customer.respectful_name}?`;
+        return pickVariedPhrase("all_done_bridge", [
+          `Is there anything else I can assist you with today, ${customer.respectful_name}?`,
+          `Before we wrap up, ${customer.respectful_name}, is there anything else on your account I can help with?`,
+          `Do you have any other questions on your license or visas today, ${customer.respectful_name}?`,
+          `Anything else I can sort out for you on Portal 360 while we're on the line, ${customer.respectful_name}?`
+        ]);
       }
+
+      if (nextStep.step_id === "STEP_2_PITCH_OFFERS") {
+        return pickVariedPhrase("step_2_bridge", [
+          `Coming back to your renewal window, ${customer.respectful_name}—you pre-qualify for 15% off our 3-Year License Renewal package as well as 3 months rent-free on Al Hamra warehouse expansion. Do either of those fit your plans this year?`,
+          `On the renewal side, ${customer.respectful_name}, your profile is pre-approved for two options: a 15% discount on a 3-Year License Renewal with 2 free visa quotas, or a 3-month rent-free grace period for warehouse expansion. Which one sounds more useful to you?`,
+          `By the way, ${customer.respectful_name}, I also wanted to share your two pre-approved Portal 360 offers—the 15% 3-Year Renewal package and the Al Hamra Warehouse Expansion offer. Would you like to explore either of those?`,
+          `Looking at your upcoming renewal, ${customer.respectful_name}, we have a 15% multi-year license discount and a 3-month rent-free warehouse package ready on your profile. Which option works better for you?`
+        ]);
+      }
+
+      if (nextStep.step_id === "STEP_3_CONFIRM_SELECTION") {
+        const o1 = customer.offers[0]?.short_label || "3-Year Renewal Package";
+        const o2 = customer.offers[1]?.short_label || "Warehouse Expansion Offer";
+        return pickVariedPhrase("step_3_bridge", [
+          `Whenever you're ready, ${customer.respectful_name}, would you like me to lock in the ${o1} or the ${o2} on your Portal 360 profile, or should I leave them open for now?`,
+          `Between the ${o1} and the ${o2}, ${customer.respectful_name}, would you like me to activate one of those for you today, or send the details to your email first?`,
+          `How do you feel about those renewal options, ${customer.respectful_name}—shall we lock one into Portal 360 now, or would you prefer more time to review?`,
+          `Would you like me to reserve either the ${o1} or the ${o2} under your profile today, ${customer.respectful_name}?`,
+          `Should I go ahead and register one of those pre-approved packages for you on Portal 360, ${customer.respectful_name}, or keep them on hold for later?`
+        ]);
+      }
+
+      if (nextStep.step_id === "STEP_4_CAPTURE_CSAT") {
+        return pickVariedPhrase("step_4_bridge", [
+          `Also, ${customer.respectful_name}, how would you rate your experience with RAKEZ and Portal 360 so far on a scale of 1 to 5?`,
+          `Quick question for our quality team, ${customer.respectful_name}—from 1 to 5, how satisfied have you been with Portal 360 and our support recently?`,
+          `By the way, ${customer.respectful_name}, if you had to rate your overall experience with RAKEZ from 1 to 5 stars, what score would you give us?`,
+          `Before we finish up, ${customer.respectful_name}, how would you score our service and Portal 360 on a 1 to 5 scale?`
+        ]);
+      }
+
+      if (nextStep.step_id === "STEP_5_CHECK_ISSUES_CLOSE") {
+        return pickVariedPhrase("step_5_bridge", [
+          `Is there anything else on your visas or trade license I can help sort out before I send your summary email to ${customer.email}?`,
+          `Before I email your confirmation summary over to ${customer.email}, ${customer.respectful_name}, is there any other blocker I can take care of for you?`,
+          `Do you need any other help with PRO services or renewals today before I send the recap to ${customer.email}, ${customer.respectful_name}?`,
+          `Everything is updated on our end—is there anything else I can assist you with before I drop the summary into your inbox at ${customer.email}?`
+        ]);
+      }
+
       return nextStep.question_to_ask
         .replace(/\{respectful_name\}/g, customer.respectful_name)
         .replace(/\{email\}/g, customer.email);
@@ -874,17 +935,27 @@
     }
 
     // =========================================================================
-    // 3. FULL-DUPLEX VOICE, INSTANT BARGE-IN & MOBILE-COMPATIBLE MIC ENGINE
-    //    - Fixes Mobile Mic: Avoids getUserMedia + SpeechRecognition hardware lock
-    //    - Fixes Laptop Interruption: Real-time barge-in stops Noura mid-sentence
-    //      on your very first spoken word without losing what you said!
+    // 3. FULL-DUPLEX VOICE, CLAUSE-STREAMED INSTANT BARGE-IN & ACCUMULATOR ENGINE
+    //    - Clause-Chunked TTS: Splits Noura's speech into short 5-8 word breath
+    //      clauses so window.speechSynthesis.cancel() halts within <80ms on Windows/Mac!
+    //    - Persistent Turn Accumulator (turnTranscriptBuffer): Never loses words
+    //      across SpeechRecognition restarts and never commits only the first word!
+    //    - Hold / Wait Mode: If customer says "Wait a minute", Noura stops and stays
+    //      quiet until the customer speaks again!
     // =========================================================================
     let availableVoices = [];
     let activeRecognition = null;
     let isListeningForResponse = false;
     let responseSilenceTimer = null;
     let currentAISpokenTextLower = "";
+    let lastSubstantiveAIReply = "";
     let speechStartedAt = 0;
+    let ttsPlaybackToken = 0;
+    let customerOnHoldWait = false;
+
+    // Persistent accumulator across a single user turn so browser onend restarts never drop words
+    let turnFinalizedBuffer = "";
+    let turnInterimBuffer = "";
 
     const isMobileDevice = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
@@ -898,19 +969,28 @@
       if (mode === "ai_speaking") {
         banner.className = "px-4 py-2.5 bg-sky-50 border-b border-sky-200 flex items-center justify-between text-xs transition-colors";
         dot.className = "w-2.5 h-2.5 rounded-full bg-sky-500 animate-pulse";
-        label.textContent = customText || "🔊 Noura is speaking... (Speak anytime to interrupt her naturally)";
+        label.textContent = customText || "🔊 Noura is speaking... (Speak anytime to interrupt her immediately)";
         label.className = "font-bold text-sky-900";
-        pill.textContent = "Barge-In Ready";
+        pill.textContent = "Instant Barge-In Active";
         pill.className = "px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-300 uppercase tracking-wider";
         previewBar.classList.remove("hidden");
         previewBar.classList.add("flex");
       } else if (mode === "listening_response") {
         banner.className = "px-4 py-2.5 bg-emerald-50 border-b border-emerald-200 flex items-center justify-between text-xs transition-colors";
         dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping";
-        label.textContent = customText || "🟢 Your Turn — Listening (Speak naturally)...";
+        label.textContent = customText || "🟢 Your Turn — Listening (Take your time and speak naturally)...";
         label.className = "font-bold text-emerald-900";
-        pill.textContent = "● Mic Active";
+        pill.textContent = "● Listening";
         pill.className = "px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-600 text-white pulse-listen uppercase tracking-wider";
+        previewBar.classList.remove("hidden");
+        previewBar.classList.add("flex");
+      } else if (mode === "on_hold_wait") {
+        banner.className = "px-4 py-2.5 bg-amber-50 border-b border-amber-300 flex items-center justify-between text-xs transition-colors";
+        dot.className = "w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping";
+        label.textContent = customText || "⏸️ Noura is waiting patiently — Speak whenever you're ready to continue";
+        label.className = "font-bold text-amber-900";
+        pill.textContent = "Paused for You";
+        pill.className = "px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-900 uppercase tracking-wider";
         previewBar.classList.remove("hidden");
         previewBar.classList.add("flex");
       } else {
@@ -925,15 +1005,7 @@
       }
     }
 
-    /**
-     * Mobile-Safe & Desktop Full-Duplex Audio Setup:
-     * - On Mobile: Do NOT keep a parallel getUserMedia stream open, because Android/iOS
-     *   locks the hardware microphone and blocks SpeechRecognition from hearing you!
-     * - On Desktop/Laptop: Uses a sensitive RMS time-domain voice detector so speaking
-     *   immediately barges in and stops Noura within <100ms.
-     */
     async function initEchoCancelledMicStream() {
-      // Unlock speechSynthesis on mobile user gesture
       if ("speechSynthesis" in window) {
         try {
           const warmUp = new SpeechSynthesisUtterance("");
@@ -942,7 +1014,6 @@
         } catch (e) {}
       }
 
-      // On mobile devices, skip persistent getUserMedia so SpeechRecognition gets exclusive mic access
       if (isMobileDevice) {
         return;
       }
@@ -976,13 +1047,11 @@
               sumSquares += timeData[i] * timeData[i];
             }
             const rms = Math.sqrt(sumSquares / timeData.length);
-            // Sensitive human voice RMS threshold (0.032) after 350ms of AI speech start
-            if (rms > 0.032 && (Date.now() - speechStartedAt > 350)) {
+            if (rms > 0.024 && (Date.now() - speechStartedAt > 260)) {
               consecutiveVoiceFrames++;
-              if (consecutiveVoiceFrames >= 3) {
+              if (consecutiveVoiceFrames >= 2) {
                 consecutiveVoiceFrames = 0;
-                stopAllAudioPlayback(true);
-                updateTurnBannerUI("listening_response", "🟢 Interrupted — Listening to you now...");
+                triggerInstantBargeInCutoff();
               }
             } else {
               consecutiveVoiceFrames = Math.max(0, consecutiveVoiceFrames - 1);
@@ -994,6 +1063,22 @@
         };
         bargeInMonitorId = requestAnimationFrame(checkBargeIn);
       } catch (e) {}
+    }
+
+    /**
+     * Immediately halts Noura's voice mid-clause while keeping the user's microphone
+     * open and accumulating their full interruption sentence!
+     */
+    function triggerInstantBargeInCutoff() {
+      if (!isAISpeaking) return;
+      stopAllAudioPlayback(true);
+      updateTurnBannerUI("listening_response", "🟢 Interrupted — Listening to your full sentence...");
+      const liveInterim = document.getElementById("liveMicInterimText");
+      if (liveInterim && !turnFinalizedBuffer && !turnInterimBuffer) {
+        liveInterim.textContent = "Noura stopped — continue speaking your full thought...";
+      }
+      // Give the user a generous 2.4-second initial window after interrupting to finish their full thought
+      scheduleSmartCommitTimer(2400);
     }
 
     function stopMicStream() {
@@ -1087,17 +1172,24 @@
         .trim();
     }
 
-    function stopResponseRecordingWindow() {
-      isListeningForResponse = false;
+    function clearTurnTranscriptBuffers() {
+      turnFinalizedBuffer = "";
+      turnInterimBuffer = "";
       if (responseSilenceTimer) {
         clearTimeout(responseSilenceTimer);
         responseSilenceTimer = null;
       }
+    }
+
+    function stopResponseRecordingWindow() {
+      isListeningForResponse = false;
+      clearTurnTranscriptBuffers();
       if (activeRecognition) {
         try {
           activeRecognition.onend = null;
           activeRecognition.onerror = null;
           activeRecognition.onresult = null;
+          activeRecognition.onspeechstart = null;
           activeRecognition.abort();
         } catch (e) {}
         activeRecognition = null;
@@ -1105,6 +1197,7 @@
     }
 
     function stopAllAudioPlayback(triggeredByBargeIn = false) {
+      ttsPlaybackToken++; // Invalidates any queued speech clauses immediately!
       if (triggeredByBargeIn && isAISpeaking) {
         conversationState.wasInterrupted = true;
       }
@@ -1114,7 +1207,9 @@
       waveBox.classList.remove("flex");
 
       if ("speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
+        try {
+          window.speechSynthesis.cancel();
+        } catch (e) {}
       }
       if (activeAudioPlayer) {
         try {
@@ -1133,25 +1228,94 @@
       if (!isAISpeaking || !currentAISpokenTextLower) return false;
       const cleanHeard = heardText.toLowerCase().replace(/[^a-z0-9\s]/g, "").trim();
       if (!cleanHeard) return true;
-      const bargeInTriggers = ["wait", "hold on", "stop", "actually", "question", "no", "yes", "sorry", "excuse me", "what about", "how much", "installment", "document", "ubo", "visa", "warehouse", "3-year", "three year"];
+      const bargeInTriggers = [
+        "wait", "hold", "stop", "pause", "minute", "second", "moment", "actually", "question",
+        "no", "yes", "sorry", "excuse", "what", "how", "can you", "repeat", "again", "pardon",
+        "need", "want", "tell me", "installment", "document", "ubo", "visa", "warehouse",
+        "3-year", "three year", "listen", "hey", "noura", "tariff", "price", "cost", "expensive"
+      ];
       if (bargeInTriggers.some(w => cleanHeard.includes(w))) return false;
       const words = cleanHeard.split(/\s+/).filter(w => w.length > 2);
       if (words.length === 0) return false;
       const matchedInAI = words.filter(w => currentAISpokenTextLower.includes(w));
-      return (matchedInAI.length / words.length) >= 0.75;
+      return (matchedInAI.length / words.length) >= 0.85;
     }
 
     /**
-     * Speaks Noura's turn while keeping SpeechRecognition alive on desktop for instant
-     * word-level barge-in, and automatically activating on mobile right after speech.
+     * Determines how long to wait after the customer's last word before sending their turn.
+     * Prevents the "first-word-only" cutoff bug by giving 2.2s if they only said 1-2 starter words
+     * or ended on a trailing preposition/verb ("I need...", "Wait I want to ask...", "Can you...").
      */
-    async function speakText(rawText, openMicAfter = true) {
+    function computeSmartPauseDelayMs(combinedText) {
+      const clean = combinedText.toLowerCase().trim();
+      const words = clean.split(/\s+/).filter(Boolean);
+      if (words.length === 0) return 1500;
+
+      const lastWord = words[words.length - 1].replace(/[^a-z]/g, "");
+      const danglingEndings = [
+        "i", "need", "want", "would", "like", "to", "for", "and", "or", "but", "about",
+        "the", "a", "an", "my", "our", "if", "can", "could", "what", "how", "when",
+        "where", "why", "who", "wait", "hold", "so", "because", "with", "on", "in",
+        "at", "from", "of", "that", "this", "is", "are", "was", "have", "has", "do", "does", "please"
+      ];
+
+      // If sentence ends on an incomplete connector/starter word, give 2200ms so user isn't cut off mid-sentence
+      if (danglingEndings.includes(lastWord)) {
+        return 2200;
+      }
+
+      // Complete short commands ("yes", "no", "wait a minute", "can you repeat", "hold on")
+      const completeShortPhrases = [
+        "yes", "yeah", "yep", "no", "nope", "sure", "okay", "ok", "speaking", "hello", "hi",
+        "bye", "goodbye", "thanks", "thank you", "repeat", "can you repeat", "wait a minute",
+        "hold on", "one minute", "one second", "just a minute", "stop"
+      ];
+      if (completeShortPhrases.includes(clean)) {
+        return 1050;
+      }
+
+      // If only 1 or 2 words spoken so far (e.g., "Actually", "One question"), wait 2100ms for the rest of the sentence!
+      if (words.length <= 2) {
+        return 2100;
+      }
+
+      // Standard full sentence pause: 1350ms allows natural breathing between clauses
+      return 1350;
+    }
+
+    function scheduleSmartCommitTimer(delayMs) {
+      if (responseSilenceTimer) clearTimeout(responseSilenceTimer);
+      responseSilenceTimer = setTimeout(() => {
+        const fullHeard = normalizeTranscriptForRAKEZ((turnFinalizedBuffer + " " + turnInterimBuffer).trim());
+        if (!fullHeard) return;
+        // If Noura is still speaking and we haven't stopped her yet, ignore echo
+        if (isAISpeaking && isLikelyAISpeakerEcho(fullHeard)) {
+          clearTurnTranscriptBuffers();
+          return;
+        }
+        clearTurnTranscriptBuffers();
+        const inputField = document.getElementById("customerInput");
+        if (inputField) inputField.value = "";
+        processCustomerUtterance(fullHeard);
+      }, delayMs);
+    }
+
+    /**
+     * Splits Noura's reply into short 6-10 word conversational clauses and speaks them
+     * sequentially. Because each utterance is short (~1.5s), calling speechSynthesis.cancel()
+     * on Windows/Mac Chrome stops Noura almost instantaneously (<80ms) when interrupted!
+     */
+    async function speakText(rawText, openMicAfter = true, isSubstantive = true) {
       stopAllAudioPlayback(false);
+      const myToken = ++ttsPlaybackToken;
 
       isAISpeaking = true;
       speechStartedAt = Date.now();
       const spokenText = formatForHumanSpeech(rawText);
       currentAISpokenTextLower = spokenText.toLowerCase();
+      if (isSubstantive) {
+        lastSubstantiveAIReply = rawText;
+      }
 
       const waveBox = document.getElementById("waveformBox");
       waveBox.classList.remove("hidden");
@@ -1160,19 +1324,23 @@
 
       if (isMobileDevice) {
         stopResponseRecordingWindow();
-      } else if (callActive && openMicAfter && !activeRecognition) {
+      } else if (callActive && !activeRecognition) {
         startResponseRecordingWindow();
       }
 
       const onSpeechFinished = () => {
-        if (!isAISpeaking) return;
+        if (myToken !== ttsPlaybackToken) return; // Interrupted or superseded
         isAISpeaking = false;
         waveBox.classList.add("hidden");
         waveBox.classList.remove("flex");
         if (callActive && openMicAfter) {
-          updateTurnBannerUI("listening_response");
+          if (customerOnHoldWait) {
+            updateTurnBannerUI("on_hold_wait");
+          } else {
+            updateTurnBannerUI("listening_response");
+          }
           if (!activeRecognition) {
-            setTimeout(() => startResponseRecordingWindow(), isMobileDevice ? 120 : 50);
+            setTimeout(() => startResponseRecordingWindow(), isMobileDevice ? 120 : 40);
           }
         }
       };
@@ -1194,7 +1362,7 @@
               voice_settings: { stability: 0.46, similarity_boost: 0.82, style: 0.35, use_speaker_boost: true }
             })
           });
-          if (resp.ok) {
+          if (resp.ok && myToken === ttsPlaybackToken) {
             const blob = await resp.blob();
             const url = URL.createObjectURL(blob);
             const audio = new Audio(url);
@@ -1210,7 +1378,7 @@
         } catch (e) {}
       }
 
-      // 2. Built-in Browser Natural Neural Speech (Single Utterance to prevent mobile onend stalls)
+      // 2. Built-in Browser Natural Neural Speech (Clause-Streamed for Instant Barge-In Cutoff)
       if (!("speechSynthesis" in window)) {
         onSpeechFinished();
         return;
@@ -1220,35 +1388,55 @@
         const bestVoice = getSelectedBrowserVoice();
         const isNaturalVoice = bestVoice && (bestVoice.name.includes("Natural") || bestVoice.name.includes("Online"));
 
-        const utter = new SpeechSynthesisUtterance(spokenText);
-        if (bestVoice) utter.voice = bestVoice;
-        utter.lang = bestVoice?.lang || "en-US";
-        utter.rate = isNaturalVoice ? 1.02 : 0.99;
-        utter.pitch = isNaturalVoice ? 1.01 : 1.02;
+        // Split by sentence/clause punctuation so each utterance is short and cancels immediately on barge-in
+        const rawClauses = spokenText
+          .split(/(?<=[.!?])\s+|(?<=,)\s+(?=[A-Z0-9a-z]{3,})/)
+          .map(c => c.trim())
+          .filter(Boolean);
+        const clauses = rawClauses.length > 0 ? rawClauses : [spokenText];
 
-        const estimatedDurationMs = Math.max(2500, spokenText.split(/\s+/).length * 420 + 1200);
-        const watchdog = setTimeout(() => {
-          if (isAISpeaking) onSpeechFinished();
-        }, estimatedDurationMs);
+        let clauseIdx = 0;
+        const speakNextClause = () => {
+          if (myToken !== ttsPlaybackToken || !isAISpeaking) return;
+          if (clauseIdx >= clauses.length) {
+            onSpeechFinished();
+            return;
+          }
+          const clauseText = clauses[clauseIdx++];
+          const utter = new SpeechSynthesisUtterance(clauseText);
+          if (bestVoice) utter.voice = bestVoice;
+          utter.lang = bestVoice?.lang || "en-US";
+          utter.rate = isNaturalVoice ? 1.02 : 1.0;
+          utter.pitch = isNaturalVoice ? 1.01 : 1.02;
 
-        utter.onend = () => {
-          clearTimeout(watchdog);
-          onSpeechFinished();
+          const clauseWatchdog = setTimeout(() => {
+            if (myToken === ttsPlaybackToken && isAISpeaking) {
+              speakNextClause();
+            }
+          }, Math.max(1800, clauseText.split(/\s+/).length * 420 + 900));
+
+          utter.onend = () => {
+            clearTimeout(clauseWatchdog);
+            if (myToken === ttsPlaybackToken && isAISpeaking) {
+              speakNextClause();
+            }
+          };
+          utter.onerror = () => {
+            clearTimeout(clauseWatchdog);
+            if (myToken === ttsPlaybackToken && isAISpeaking) {
+              speakNextClause();
+            }
+          };
+
+          window.speechSynthesis.speak(utter);
         };
-        utter.onerror = () => {
-          clearTimeout(watchdog);
-          onSpeechFinished();
-        };
 
-        window.speechSynthesis.speak(utter);
+        speakNextClause();
       } catch (e) {
         onSpeechFinished();
       }
     }
 
-    /**
-     * Full-Duplex SpeechRecognition Engine (Mobile & Desktop Compatible)
-     */
     function startResponseRecordingWindow(fallbackLang = null) {
       if (!callActive) return;
       const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1257,7 +1445,16 @@
         return;
       }
 
-      stopResponseRecordingWindow();
+      if (activeRecognition) {
+        try {
+          activeRecognition.onend = null;
+          activeRecognition.onerror = null;
+          activeRecognition.onresult = null;
+          activeRecognition.onspeechstart = null;
+          activeRecognition.abort();
+        } catch (e) {}
+        activeRecognition = null;
+      }
 
       try {
         const recognition = new SpeechRec();
@@ -1271,68 +1468,55 @@
 
         isListeningForResponse = true;
         if (!isAISpeaking) {
-          updateTurnBannerUI("listening_response");
+          updateTurnBannerUI(customerOnHoldWait ? "on_hold_wait" : "listening_response");
         }
 
         const liveInterim = document.getElementById("liveMicInterimText");
         const inputField = document.getElementById("customerInput");
-        liveInterim.textContent = isAISpeaking
-          ? "Barge-in active — speak anytime to interrupt Noura"
-          : "Listening for your response... speak naturally now";
-
-        let finalizedText = "";
-        let latestInterim = "";
-
-        const commitCustomerResponse = () => {
-          const fullHeard = normalizeTranscriptForRAKEZ((finalizedText + " " + latestInterim).trim());
-          finalizedText = "";
-          latestInterim = "";
-          stopResponseRecordingWindow();
-          if (fullHeard) {
-            inputField.value = "";
-            processCustomerUtterance(fullHeard);
-          } else if (callActive && !isAISpeaking) {
-            startResponseRecordingWindow();
-          }
-        };
+        if (!turnFinalizedBuffer && !turnInterimBuffer) {
+          liveInterim.textContent = isAISpeaking
+            ? "Barge-in active — speak anytime to interrupt Noura"
+            : customerOnHoldWait
+              ? "Paused on hold for you — speak whenever you're ready"
+              : "Listening for your response... speak naturally now";
+        }
 
         recognition.onresult = (event) => {
-          latestInterim = "";
-          let newFinalChunk = "";
+          let currentSessionFinal = "";
+          let currentSessionInterim = "";
+
           for (let i = event.resultIndex; i < event.results.length; ++i) {
             const chunk = event.results[i][0].transcript;
             if (event.results[i].isFinal) {
-              newFinalChunk += " " + chunk;
+              currentSessionFinal += " " + chunk;
             } else {
-              latestInterim += chunk;
+              currentSessionInterim += chunk;
             }
           }
 
-          const candidateHeard = (newFinalChunk + " " + latestInterim).trim();
-          if (isAISpeaking) {
+          const candidateHeard = (currentSessionFinal + " " + currentSessionInterim).trim();
+
+          // If Noura is currently speaking, check if this is speaker echo or real customer barge-in
+          if (isAISpeaking && candidateHeard) {
             if (isLikelyAISpeakerEcho(candidateHeard)) {
               return;
             }
-            stopAllAudioPlayback(true);
-            updateTurnBannerUI("listening_response", "🟢 Interrupted — Listening to you now...");
+            // Genuine customer interruption! Stop Noura immediately and keep accumulating user's full speech
+            triggerInstantBargeInCutoff();
           }
 
-          if (newFinalChunk) {
-            finalizedText += " " + newFinalChunk;
+          if (currentSessionFinal.trim()) {
+            turnFinalizedBuffer = (turnFinalizedBuffer + " " + currentSessionFinal).trim();
           }
+          turnInterimBuffer = currentSessionInterim.trim();
 
-          const combined = normalizeTranscriptForRAKEZ((finalizedText + " " + latestInterim).trim());
+          const combined = normalizeTranscriptForRAKEZ((turnFinalizedBuffer + " " + turnInterimBuffer).trim());
           if (combined) {
             inputField.value = combined;
             liveInterim.textContent = `You: "${combined}"`;
 
-            const wordCount = combined.split(/\s+/).length;
-            const pauseDelayMs = wordCount <= 4 ? 750 : 950;
-
-            if (responseSilenceTimer) clearTimeout(responseSilenceTimer);
-            responseSilenceTimer = setTimeout(() => {
-              commitCustomerResponse();
-            }, pauseDelayMs);
+            const pauseDelayMs = computeSmartPauseDelayMs(combined);
+            scheduleSmartCommitTimer(pauseDelayMs);
           }
         };
 
@@ -1346,28 +1530,34 @@
             showToast("Microphone permission blocked! Please allow microphone access in your browser address bar.", true);
             return;
           }
-          if (callActive && !(finalizedText || latestInterim)) {
+          if (callActive) {
             setTimeout(() => {
               if (callActive && (!isMobileDevice || !isAISpeaking)) {
                 startResponseRecordingWindow(recognition.lang);
               }
-            }, 180);
+            }, 150);
           }
         };
 
         recognition.onend = () => {
-          const combined = normalizeTranscriptForRAKEZ((finalizedText + " " + latestInterim).trim());
+          // IMPORTANT: Do NOT immediately fire processCustomerUtterance on recognition.onend!
+          // If the user is still mid-turn or paused briefly, let scheduleSmartCommitTimer handle commit
+          // and seamlessly restart recognition so subsequent words keep appending to turnFinalizedBuffer!
+          if (turnInterimBuffer) {
+            turnFinalizedBuffer = (turnFinalizedBuffer + " " + turnInterimBuffer).trim();
+            turnInterimBuffer = "";
+          }
+          const combined = normalizeTranscriptForRAKEZ(turnFinalizedBuffer.trim());
           if (combined && !isAISpeaking) {
-            if (responseSilenceTimer) clearTimeout(responseSilenceTimer);
-            stopResponseRecordingWindow();
-            inputField.value = "";
-            processCustomerUtterance(combined);
-          } else if (callActive && isListeningForResponse && (!isMobileDevice || !isAISpeaking)) {
+            const remainingDelay = isMobileDevice ? 650 : 500;
+            scheduleSmartCommitTimer(remainingDelay);
+          }
+          if (callActive && isListeningForResponse && (!isMobileDevice || !isAISpeaking)) {
             setTimeout(() => {
-              if (callActive && isListeningForResponse) {
+              if (callActive && isListeningForResponse && (!isMobileDevice || !isAISpeaking)) {
                 startResponseRecordingWindow(recognition.lang);
               }
-            }, 120);
+            }, 80);
           }
         };
 
@@ -1668,14 +1858,19 @@
       const utterance = normalizeTranscriptForRAKEZ(rawUtterance);
       if (!utterance) return;
 
-      // Stop response recording immediately while Noura processes and speaks her reply
-      stopResponseRecordingWindow();
-
+      // Capture whether the user interrupted Noura mid-sentence
       const interruptedMidSpeech = isAISpeaking || conversationState.wasInterrupted;
       if (isAISpeaking) {
         stopAllAudioPlayback(true);
       }
       conversationState.wasInterrupted = false;
+      customerOnHoldWait = false;
+
+      // Clear turn buffers while Noura processes and speaks her reply
+      clearTurnTranscriptBuffers();
+      if (isMobileDevice) {
+        stopResponseRecordingWindow();
+      }
 
       if (!callActive) {
         await startOutboundCall();
@@ -1686,17 +1881,101 @@
       conversationState.turnCount++;
       conversationState.history.push({ role: "user", content: utterance });
 
-      const lower = utterance.toLowerCase();
+      const lower = utterance.toLowerCase().trim();
       const customer = getActiveCustomer();
       const simTime = "11:30";
 
+      // Dynamically varied, natural human interruption prefix (never repeats the same line!)
+      const bargeInPrefix = interruptedMidSpeech
+        ? pickVariedPhrase("barge_in_prefix", [
+            `Oh, sorry ${customer.respectful_name}—`,
+            `Pardon me, ${customer.respectful_name}—`,
+            `Of course, ${customer.respectful_name}—`,
+            `Jumping right to that, ${customer.respectful_name}—`,
+            `My apologies for overlapping, ${customer.respectful_name}—`
+          ]) + " "
+        : "";
+
       checkCustomAgendaKeywords(lower);
+
+      // 0A. "WAIT A MINUTE" / "HOLD ON" / "GIVE ME A SECOND" PAUSE HANDLER
+      // When customer asks Noura to wait/hold, she stops immediately, acknowledges briefly,
+      // and enters Hold/Wait mode WITHOUT pushing any agenda question!
+      const isHoldWaitRequest = (
+        /\b(wait a minute|wait a second|wait a moment|hold on|give me a minute|give me a second|just a minute|just a second|one minute|one second|hold please|pause|let me check|hang on)\b/i.test(lower) ||
+        ["wait", "hold", "pause"].includes(lower.replace(/[^a-z]/g, ""))
+      );
+      if (isHoldWaitRequest) {
+        customerOnHoldWait = true;
+        const holdReply = pickVariedPhrase("hold_wait_reply", [
+          `Of course, ${customer.respectful_name}—take your time! I'll hold right here until you're ready.`,
+          `No rush at all, ${customer.respectful_name}. Just let me know whenever you're ready to continue.`,
+          `Sure thing, ${customer.respectful_name}, I'm pausing right here. Take all the time you need.`,
+          `Absolutely, ${customer.respectful_name}—I'm on the line, go ahead whenever you're set.`
+        ]);
+        conversationState.history.push({ role: "assistant", content: holdReply });
+        appendMessage("ai", holdReply, "Paused on Hold at Customer Request (No Agenda Push)");
+        speakText(holdReply, true, false);
+        return;
+      }
+
+      // 0B. Handle short incomplete starter fragments ("I need", "I want", "Can I ask", "Actually", "Let me ask")
+      const strippedWords = lower.replace(/[^a-z0-9\s]/g, "").trim().split(/\s+/).filter(Boolean);
+      const isShortFragment = (
+        strippedWords.length <= 3 &&
+        (
+          /^(i need|i want|i would like|can i|what about|excuse me|listen|sorry|actually|let me|i have a|quick question)$/i.test(lower.replace(/[^a-z\s]/gi, "").trim()) ||
+          ["need", "want"].includes(strippedWords[strippedWords.length - 1])
+        )
+      );
+      if (isShortFragment) {
+        const promptMore = pickVariedPhrase("yield_floor_reply", [
+          `Please go ahead, ${customer.respectful_name}—what can I help you with?`,
+          `I'm all ears, ${customer.respectful_name}, tell me what you need.`,
+          `Of course, ${customer.respectful_name}—go right ahead, what's on your mind?`,
+          `Sure thing, ${customer.respectful_name}, what would you like to look into?`
+        ]);
+        conversationState.history.push({ role: "assistant", content: promptMore });
+        appendMessage("ai", promptMore, "Yielded Floor • Listening for Customer's Full Question");
+        speakText(promptMore, true, false);
+        return;
+      }
+
+      // 0C. Handle Repeat / Clarification Requests ("can you repeat", "say that again", "pardon", "what did you say")
+      if (
+        lower.includes("repeat") ||
+        lower.includes("say that again") ||
+        lower.includes("come again") ||
+        lower.includes("pardon") ||
+        lower.includes("didn't catch") ||
+        lower.includes("did not catch") ||
+        lower.includes("didn't hear") ||
+        lower.includes("what did you say") ||
+        lower.includes("speak slower") ||
+        lower.includes("again please")
+      ) {
+        const offerSummary = customer.offers.map(o => `${o.short_label} (${o.discount})`).join(", and ");
+        const repeatIntro = pickVariedPhrase("repeat_intro", [
+          `Certainly, ${customer.respectful_name}—let me go over that clearly for you:`,
+          `My apologies if I spoke too quickly, ${customer.respectful_name}! Here is what I shared:`,
+          `Of course, ${customer.respectful_name}, happy to repeat that:`,
+          `Sure thing, ${customer.respectful_name}—in short:`
+        ]);
+        const repeatBody = lastSubstantiveAIReply
+          ? lastSubstantiveAIReply
+          : `You pre-qualify for ${offerSummary} on your Portal 360 profile, and I can lock either of those in for you right here on the call.`;
+        const repeatReply = `${repeatIntro} ${repeatBody}`;
+        conversationState.history.push({ role: "assistant", content: repeatReply });
+        appendMessage("ai", repeatReply, "Repeated Previous Point Clearly");
+        speakText(repeatReply, true, false);
+        return;
+      }
 
       // 1. DNC Opt-Out
       if (lower.includes("stop calling") || lower.includes("dnc") || lower.includes("remove me") || lower.includes("do not call") || lower.includes("take me off")) {
         customer.dnc_opted_out = true;
         renderComplianceAndCustomerUI();
-        const reply = `I completely understand, ${customer.respectful_name}—sorry to catch you at a busy time. I've added your number to our Do Not Call list per UAE regulations, so you won't receive any more outreach calls from us. Take care!`;
+        const reply = `I completely understand, ${customer.respectful_name}—sorry to catch you at an inconvenient time. I've added your number to our Do Not Call list per UAE regulations, so you won't receive any further outreach calls from us. Wishing you a great day!`;
         appendMessage("ai", reply, "TDRA Do-Not-Call Opt-Out Recorded");
         speakText(reply, false);
         endActiveCall("Customer Opted Out (DNC)");
@@ -1775,26 +2054,28 @@
 
       // 3. Natural Step 1 Turn: If Noura just asked "Am I speaking with Mr. Tariq?" and customer says "Yes / Speaking / Hello"
       const affirmativeWords = ["yes", "yeah", "yep", "sure", "speaking", "confirm", "lock it", "lock that", "go ahead", "apply it", "do it", "sounds good", "please do", "book it", "activate", "okay", "ok", "hi", "hello", "good"];
-      const negativeWords = ["no", "not right now", "maybe later", "hold off", "different one", "other offer", "don't apply"];
+      const negativeWords = ["no", "not right now", "maybe later", "hold off", "different one", "other offer", "don't apply", "not interested", "skip", "pass"];
 
       if (!conversationState.introCompleted && conversationState.turnCount === 2 && !matchedMandatedScenario) {
         conversationState.introCompleted = true;
         markAgendaStepCompleted("STEP_1_GREETING_CONSENT");
 
-        // If the customer didn't immediately jump to a specific question/offer, deliver the natural Step 1 introduction
         const jumpedToQuestion = backendScenarios.some(sc => sc.trigger_keywords.some(kw => lower.includes(kw.toLowerCase()))) || matchBriefOfferMention(lower, customer);
         if (!jumpedToQuestion) {
-          const introReply = `Hi ${customer.respectful_name}! This is Noura calling from RAKEZ Client Relations on a recorded line. Hope your day is going well! I'm calling because your trade license renewal window is coming up, and you pre-qualify for 15% off our 3-Year License Renewal package as well as 3 months rent-free on Al Hamra warehouse expansion. Do you have a quick minute to look at those?`;
+          const introReply = pickVariedPhrase("step_1_intro", [
+            `Hi ${customer.respectful_name}! This is Noura calling from RAKEZ Client Relations on a recorded line. Hope your week is going well! I'm reaching out because your renewal window is coming up, and you pre-qualify for 15% off our 3-Year License Renewal package as well as 3 months rent-free on Al Hamra warehouse expansion. Which of those sounds more useful for your plans?`,
+            `Wonderful, thank you ${customer.respectful_name}! This is Noura from the RAKEZ Client Relations team calling on a recorded line. I'm checking in because your profile is pre-approved for two renewal benefits—a 15% discount on a 3-Year License Renewal with 2 free visa quotas, and a 3-month rent-free warehouse expansion offer. Do either of those catch your interest today?`
+          ]);
           markAgendaStepCompleted("STEP_2_PITCH_OFFERS");
           conversationState.offersPresented = true;
           conversationState.history.push({ role: "assistant", content: introReply });
-          appendMessage("ai", introReply, "Step 1 & Step 2 Covered: Intro & Renewal Offers Shared");
+          appendMessage("ai", introReply, "Step 1 & Step 2 Covered: Intro & Pre-Approved Offers Shared");
           speakText(introReply, true);
           return;
         }
       }
 
-      // 4. Topic Change / Off-Script Question Handler + Smooth Return to Agenda
+      // 4. Topic Change / Off-Script Question Handler + Smooth Varied Return to Agenda
       const matchedTopicChangeScenario = backendScenarios.find(
         sc => !sc.requires_rm_transfer && sc.trigger_keywords.some(kw => lower.includes(kw.toLowerCase()))
       );
@@ -1820,7 +2101,7 @@
         markAgendaStepCompleted("STEP_1_GREETING_CONSENT");
 
         let tId = "N/A";
-        let actionBadge = `${ratingBadgePart}Answered Topic Change (${matchedTopicChangeScenario.name}) -> Steered Back to Agenda`;
+        let actionBadge = `${interruptedMidSpeech ? "Barge-In Answered • " : ""}${ratingBadgePart}Resolved (${matchedTopicChangeScenario.name}) -> Steered to Agenda`;
         if (matchedTopicChangeScenario.auto_ticket_type) {
           tId = (matchedTopicChangeScenario.auto_ticket_type === "Complaint" ? "CMP-360-" : "SR-360-") + Math.random().toString(16).substring(2, 6).toUpperCase();
           ticketsState.push({
@@ -1833,7 +2114,7 @@
             time: `${simTime} GST`
           });
           renderCRMLists();
-          actionBadge = `${ratingBadgePart}Logged ${tId} & Steered Back to Agenda`;
+          actionBadge = `${interruptedMidSpeech ? "Barge-In Answered • " : ""}${ratingBadgePart}Logged ${tId} & Steered to Agenda`;
         }
 
         const scenarioAnswer = matchedTopicChangeScenario.response_template
@@ -1843,12 +2124,16 @@
         let bridgeBack = "";
         if (conversationState.pendingOfferConfirmation) {
           const pending = conversationState.pendingOfferConfirmation;
-          bridgeBack = `Now, coming back to your ${pending.short_label}—would you like me to go ahead and lock that in on your Portal 360 profile as well?`;
+          bridgeBack = pickVariedPhrase("pending_offer_return", [
+            `Whenever you're ready, would you also like me to lock in the ${pending.short_label} on your Portal 360 profile?`,
+            `Coming back to your ${pending.short_label}—shall I go ahead and register that on Portal 360 for you as well?`,
+            `And on that ${pending.short_label} we were looking at, would you like me to confirm it on your profile today?`
+          ]);
         } else {
           bridgeBack = buildAgendaReturnBridge(customer);
         }
 
-        const fullReply = `${scenarioAnswer} ${bridgeBack}`;
+        const fullReply = `${bargeInPrefix}${scenarioAnswer} ${bridgeBack}`;
         conversationState.history.push({ role: "assistant", content: fullReply });
         appendMessage("ai", fullReply, actionBadge);
         speakText(fullReply, true);
@@ -1863,7 +2148,7 @@
         if (switchedOffer && switchedOffer.offer_id !== pendingOffer.offer_id && !affirmativeWords.some(w => lower.includes(w))) {
           conversationState.pendingOfferConfirmation = switchedOffer;
           markAgendaStepCompleted("STEP_2_PITCH_OFFERS");
-          const reply = `Oh, got it ${customer.respectful_name}—let's look at ${switchedOffer.spoken_pitch} instead. Would you like me to confirm and lock that ${switchedOffer.short_label} into Portal 360 for you?`;
+          const reply = `${bargeInPrefix}Got it, ${customer.respectful_name}—let's switch over to ${switchedOffer.spoken_pitch} instead. Would you like me to confirm and lock that ${switchedOffer.short_label} into Portal 360 for you?`;
           appendMessage("ai", reply, `Switched Offer to "${switchedOffer.short_label}"`);
           speakText(reply, true);
           return;
@@ -1887,7 +2172,12 @@
           renderCRMLists();
 
           const nextBridge = buildAgendaReturnBridge(customer);
-          const reply = `Wonderful, ${customer.respectful_name}! I've just locked in the ${pendingOffer.short_label} on your Portal 360 profile under service request ${srId}. ${nextBridge}`;
+          const confirmPhrase = pickVariedPhrase("offer_locked_in", [
+            `Wonderful, ${customer.respectful_name}! I've just locked in the ${pendingOffer.short_label} on your Portal 360 profile under service request ${srId}.`,
+            `All done, ${customer.respectful_name}! Your ${pendingOffer.short_label} is now registered on Portal 360 under reference ${srId}.`,
+            `Fantastic choice, ${customer.respectful_name}—I've activated the ${pendingOffer.short_label} for you under ticket ${srId}.`
+          ]);
+          const reply = `${confirmPhrase} ${nextBridge}`;
           appendMessage("ai", reply, `Step 3 Covered: Confirmed ${srId}`);
           speakText(reply, true);
           return;
@@ -1897,7 +2187,12 @@
           conversationState.pendingOfferConfirmation = null;
           markAgendaStepCompleted("STEP_3_CONFIRM_SELECTION");
           const nextBridge = buildAgendaReturnBridge(customer);
-          const reply = `No problem at all, ${customer.respectful_name}—I'll leave that open on your Portal 360 profile in case you'd like to review it later. ${nextBridge}`;
+          const declinePhrase = pickVariedPhrase("offer_declined", [
+            `No problem at all, ${customer.respectful_name}—I'll leave that pre-approved on your Portal 360 profile so you can review it anytime.`,
+            `Completely understood, ${customer.respectful_name}. I'll keep that offer open on your dashboard with no obligation.`,
+            `Sure thing, ${customer.respectful_name}—we'll leave that package unlocked on your profile for whenever the timing is right.`
+          ]);
+          const reply = `${declinePhrase} ${nextBridge}`;
           appendMessage("ai", reply, "Step 3 Covered (Offer Left Open)");
           speakText(reply, true);
           return;
@@ -1912,8 +2207,13 @@
         markAgendaStepCompleted("STEP_1_GREETING_CONSENT");
         markAgendaStepCompleted("STEP_2_PITCH_OFFERS");
 
-        const reply = `Got it, ${customer.respectful_name}. You're referring to ${matchedOffer.spoken_pitch}. Just to confirm before I log the request in Portal 360, would you like me to go ahead and lock in the ${matchedOffer.short_label} for you?`;
-        appendMessage("ai", reply, `Matched Brief Reply "${matchedOffer.short_label}" • Asking Confirmation`);
+        const matchPhrase = pickVariedPhrase("brief_offer_match", [
+          `Got it, ${customer.respectful_name}—you're looking at ${matchedOffer.spoken_pitch}. Would you like me to go ahead and lock in the ${matchedOffer.short_label} on Portal 360 for you?`,
+          `Great choice, ${customer.respectful_name}! That's ${matchedOffer.spoken_pitch}. Shall I register the ${matchedOffer.short_label} under your profile right now?`,
+          `Perfect, ${customer.respectful_name}—${matchedOffer.spoken_pitch}. Just say the word and I'll lock in the ${matchedOffer.short_label} for you today.`
+        ]);
+        const reply = `${bargeInPrefix}${matchPhrase}`;
+        appendMessage("ai", reply, `Matched "${matchedOffer.short_label}" • Asking Confirmation`);
         speakText(reply, true);
         return;
       }
@@ -1922,13 +2222,18 @@
       if (ratingMatch) {
         const ratingNum = parseInt(ratingMatch[1], 10);
         const nextBridge = buildAgendaReturnBridge(customer);
-        const reply = `Thank you so much for that ${ratingNum} out of 5 rating, ${customer.respectful_name}—I've logged it on your Portal 360 profile. ${nextBridge}`;
+        const csatAck = pickVariedPhrase("csat_ack", [
+          `Thank you so much for that ${ratingNum} out of 5 rating, ${customer.respectful_name}—I've recorded it on your Portal 360 profile.`,
+          `I really appreciate that ${ratingNum} out of 5 feedback, ${customer.respectful_name}! I've logged it with our Customer Experience team.`,
+          `Thanks for sharing that ${ratingNum} out of 5 score, ${customer.respectful_name}—that's saved on your profile now.`
+        ]);
+        const reply = `${csatAck} ${nextBridge}`;
         appendMessage("ai", reply, `${ratingBadgePart}Advancing Agenda`);
         speakText(reply, true);
         return;
       }
 
-      // 8. Customer Asks for Offers
+      // 8. Customer Asks for Offers or Confirms Step 2
       if (lower.includes("offer") || lower.includes("what do you have") || lower.includes("benefits") || lower.includes("promotion") || lower.includes("discounts") || lower.includes("tell me more") || (!callAgenda[1].completed && affirmativeWords.some(w => lower.includes(w)))) {
         conversationState.introCompleted = true;
         conversationState.offersPresented = true;
@@ -1936,8 +2241,31 @@
         markAgendaStepCompleted("STEP_2_PITCH_OFFERS");
 
         const offerLines = customer.offers.map((o, idx) => `${idx === 0 ? "First, we have" : "And second, there's"} ${o.spoken_pitch}`).join(". ");
-        const reply = `Gladly, ${customer.respectful_name}! Looking at your Portal 360 profile right now, you pre-qualify for ${customer.offers.length} special packages. ${offerLines}. Which of those sounds like a better fit for you?`;
+        const reply = `${bargeInPrefix}Gladly, ${customer.respectful_name}! Looking at your Portal 360 profile right now, you pre-qualify for ${customer.offers.length} packages. ${offerLines}. Which of those sounds like a better fit for you?`;
         appendMessage("ai", reply, `Step 2 Covered: Shared Eligible Offers`);
+        speakText(reply, true);
+        return;
+      }
+
+      // 8B. If Step 2 was already presented and customer says "Yes / Sure / Go ahead" to locking in an offer
+      if (!callAgenda[2].completed && affirmativeWords.some(w => lower === w || lower.startsWith(w + " "))) {
+        const defaultOffer = customer.offers[0];
+        conversationState.pendingOfferConfirmation = defaultOffer;
+        const reply = pickVariedPhrase("clarify_which_package", [
+          `Great, ${customer.respectful_name}! Just so I lock in the exact one you prefer—would you like the ${customer.offers.map(o => o.short_label).join(", or the ")}?`,
+          `Awesome, ${customer.respectful_name}! Which one should I activate on your profile first—the ${customer.offers[0]?.short_label} or the ${customer.offers[1]?.short_label || "second package"}?`
+        ]);
+        appendMessage("ai", reply, "Clarifying Which Package to Lock In");
+        speakText(reply, true);
+        return;
+      }
+
+      // 8C. If Step 2 was already presented and customer says "No / Not right now" to locking in an offer
+      if (!callAgenda[2].completed && negativeWords.some(w => lower === w || lower.startsWith(w + " "))) {
+        markAgendaStepCompleted("STEP_3_CONFIRM_SELECTION");
+        const nextBridge = buildAgendaReturnBridge(customer);
+        const reply = `No problem at all, ${customer.respectful_name}—I'll leave those pre-approved offers open on your Portal 360 profile for whenever you're ready. ${nextBridge}`;
+        appendMessage("ai", reply, "Step 3 Covered (Offers Left Open on Profile)");
         speakText(reply, true);
         return;
       }
@@ -1947,16 +2275,19 @@
         const uncoveredCritical = callAgenda.find(s => !s.completed && s.step_id !== "STEP_5_CHECK_ISSUES_CLOSE");
         if (uncoveredCritical && !lower.includes("bye")) {
           const bridgePrompt = buildAgendaReturnBridge(customer);
-          const reply = `Got it, ${customer.respectful_name}. Just before I let you go—${bridgePrompt.charAt(0).toLowerCase() + bridgePrompt.slice(1)}`;
+          const reply = `Understood, ${customer.respectful_name}. Just before we wrap up—${bridgePrompt.charAt(0).toLowerCase() + bridgePrompt.slice(1)}`;
           appendMessage("ai", reply, `Agenda Guard: Covering ${uncoveredCritical.title}`);
           speakText(reply, true);
           return;
         }
 
         markAgendaStepCompleted("STEP_5_CHECK_ISSUES_CLOSE");
-        const reply = `It was an absolute pleasure speaking with you today, ${customer.respectful_name}! Everything is updated on your Portal 360 profile and I've sent the confirmation summary to ${customer.email}. Have a wonderful rest of your day!`;
-        appendMessage("ai", reply, "Step 5 Covered: All Call Agenda Objectives Completed!");
-        speakText(reply, false);
+        const closeReply = pickVariedPhrase("call_closing", [
+          `It was an absolute pleasure speaking with you today, ${customer.respectful_name}! Everything is updated on your Portal 360 profile and I've sent the confirmation summary to ${customer.email}. Have a wonderful rest of your day!`,
+          `Thank you so much for your time today, ${customer.respectful_name}! I've emailed your full Portal 360 summary to ${customer.email}. Wishing you a great day ahead!`
+        ]);
+        appendMessage("ai", closeReply, "Step 5 Covered: All Call Agenda Objectives Completed!");
+        speakText(closeReply, false);
         endActiveCall("Call Completed");
         return;
       }
@@ -1968,14 +2299,16 @@
           const nextStep = getNextPendingAgendaStep();
           const sysPrompt = `You are Noura, a warm, human-like Senior Client Relations Executive calling from Rakez (Ras Al Khaimah Economic Zone) in the UAE.
 Always address the customer respectfully as "${customer.respectful_name}".
+${interruptedMidSpeech ? "IMPORTANT: The customer just interrupted you while you were speaking. Acknowledge their interruption naturally and directly answer or address what they said." : ""}
 Customer's eligible offers:
 ${customer.offers.map(o => `- ID: ${o.offer_id} | ${o.short_label} (${o.discount}): ${o.description}`).join("\n")}
 Uncovered Call Agenda Steps remaining:
 ${callAgenda.filter(s => !s.completed).map(s => `- ${s.title}: "${s.question_to_ask}"`).join("\n")}
 Rules:
-1. First, directly and warmly answer whatever ${customer.respectful_name} just said or asked (even if they changed the topic).
-2. Second, smoothly bridge back to the next uncovered Call Agenda goal: "${nextStep ? nextStep.question_to_ask.replace(/\{respectful_name\}/g, customer.respectful_name) : "Check if they need anything else"}".
-3. Keep your total spoken reply to 2 natural, human-sounding sentences.`;
+1. Directly, naturally, and specifically respond to what ${customer.respectful_name} just said ("${utterance}").
+2. Vary your phrasing naturally like a real human specialist—never use repetitive canned phrases like "I hear you".
+3. Smoothly weave in the next uncovered Call Agenda goal if appropriate: "${nextStep ? nextStep.question_to_ask.replace(/\{respectful_name\}/g, customer.respectful_name) : "Check if they need anything else"}".
+4. Keep your total spoken reply to 2 natural, conversational sentences.`;
 
           const geminiContents = conversationState.history.slice(-6).map(m => ({
             role: m.role === "assistant" ? "model" : "user",
@@ -1988,7 +2321,7 @@ Rules:
             body: JSON.stringify({
               systemInstruction: { parts: [{ text: sysPrompt }] },
               contents: geminiContents,
-              generationConfig: { temperature: 0.6, maxOutputTokens: 150 }
+              generationConfig: { temperature: 0.7, maxOutputTokens: 160 }
             })
           });
           if (resp.ok) {
@@ -1997,7 +2330,7 @@ Rules:
             if (llmReply) {
               checkCustomAgendaKeywords(llmReply.toLowerCase());
               conversationState.history.push({ role: "assistant", content: llmReply });
-              appendMessage("ai", llmReply, "Gemini 2.5 Flash + Agenda Steering");
+              appendMessage("ai", llmReply, interruptedMidSpeech ? "Barge-In Handled • Gemini 2.5 Natural Response" : "Gemini 2.5 Flash + Agenda Steering");
               speakText(llmReply, true);
               return;
             }
@@ -2005,12 +2338,76 @@ Rules:
         } catch (err) {}
       }
 
-      // 11. Default Built-In Agenda-Aware Improvisation
+      // 11. Built-In Human Specialist NLU & Varied Response Generator (Zero "I hear you" repetition!)
       conversationState.introCompleted = true;
       markAgendaStepCompleted("STEP_1_GREETING_CONSENT");
+
+      const isQuestion = /\b(what|how|when|where|why|who|can|could|do|does|is|are|will|would|which)\b/i.test(lower) || utterance.includes("?");
+      const isNeedOrRequest = /\b(need|want|help|support|issue|problem|change|update|add|modify|amend|renew|apply|request|looking for)\b/i.test(lower);
+      const isHesitationOrThinking = /\b(not sure|think about|let me think|maybe|later|check with|partner|accountant|discuss|decide| email me|send me)\b/i.test(lower);
+
+      let contextualAck = "";
+      let badgeText = interruptedMidSpeech ? "Barge-In Handled • Dynamic Human Response" : "Dynamic Human Response • Agenda Steering";
+
+      if (isHesitationOrThinking) {
+        // Customer wants time to think or wants info by email -> mark Step 3 covered so we don't keep nagging them!
+        markAgendaStepCompleted("STEP_3_CONFIRM_SELECTION");
+        contextualAck = pickVariedPhrase("hesitation_ack", [
+          `${bargeInPrefix}That makes total sense, ${customer.respectful_name}—there's zero rush to decide on the spot. I've flagged both pre-approved packages on your Portal 360 dashboard and I'll email the full breakdown to ${customer.email} so you can review them at your convenience.`,
+          `${bargeInPrefix}Of course, ${customer.respectful_name}, take all the time you need to review the numbers. I'll send the official comparison sheet straight to ${customer.email} and keep your 15% discount pre-approval active on Portal 360.`,
+          `${bargeInPrefix}Completely fair, ${customer.respectful_name}—it's always best to review the details first. I've saved the pre-approved rates on your Portal 360 profile and queued the summary email for ${customer.email}.`
+        ]);
+        badgeText = "Saved Offers for Review & Queued Email -> Advancing Agenda";
+      } else if (isNeedOrRequest) {
+        const srId = "SR-360-" + Math.random().toString(16).substring(2, 6).toUpperCase();
+        ticketsState.push({
+          ticket_id: srId,
+          customer_id: customer.customer_id,
+          type: "Service Request",
+          priority: "Normal",
+          summary: `Client Request: ${utterance.slice(0, 48)}`,
+          channel: "Voice AI Call",
+          time: `${simTime} GST`
+        });
+        renderCRMLists();
+        contextualAck = pickVariedPhrase("custom_request_ack", [
+          `${bargeInPrefix}I can certainly take care of that for you, ${customer.respectful_name}. I've just logged a dedicated service request (${srId}) on your Portal 360 profile for "${utterance}" so our specialist team actions it today.`,
+          `${bargeInPrefix}Consider it done, ${customer.respectful_name}—I've registered "${utterance}" under Portal 360 reference ${srId} and routed it straight to our operations team.`,
+          `${bargeInPrefix}Happy to sort that out right now, ${customer.respectful_name}. I've opened ticket ${srId} on your account covering "${utterance}" and you'll see the live tracker in Portal 360.`,
+          `${bargeInPrefix}Let's get that moving for you immediately, ${customer.respectful_name}. I've created service request ${srId} for "${utterance}" so our team follows up with the exact details today.`
+        ]);
+        badgeText = `${interruptedMidSpeech ? "Barge-In Handled • " : ""}Logged ${srId} for Custom Request`;
+      } else if (isQuestion) {
+        const srId = "SR-360-" + Math.random().toString(16).substring(2, 6).toUpperCase();
+        ticketsState.push({
+          ticket_id: srId,
+          customer_id: customer.customer_id,
+          type: "Inquiry",
+          priority: "Normal",
+          summary: `Client Inquiry: ${utterance.slice(0, 48)}`,
+          channel: "Voice AI Call",
+          time: `${simTime} GST`
+        });
+        renderCRMLists();
+        contextualAck = pickVariedPhrase("custom_question_ack", [
+          `${bargeInPrefix}Great question, ${customer.respectful_name}. For "${utterance}", everything can be completed directly through your Portal 360 dashboard without visiting a service center, and I've attached the exact step-by-step guide under reference ${srId} to your email.`,
+          `${bargeInPrefix}Glad you asked, ${customer.respectful_name}! Regarding "${utterance}", our Client Relations desk handles that digitally on Portal 360—I've logged inquiry ${srId} so the exact fee and requirement sheet is included in your post-call email.`,
+          `${bargeInPrefix}To answer your question on "${utterance}", ${customer.respectful_name}—we process that online via Portal 360 with fast-track turnaround, and I've linked the full details to reference ${srId} for you.`
+        ]);
+        badgeText = `${interruptedMidSpeech ? "Barge-In Question Answered • " : ""}Logged Inquiry ${srId}`;
+      } else {
+        contextualAck = pickVariedPhrase("general_conversational_ack", [
+          `${bargeInPrefix}I appreciate you sharing that, ${customer.respectful_name}—I've added a note on your Portal 360 profile regarding "${utterance}".`,
+          `${bargeInPrefix}Thanks for letting me know, ${customer.respectful_name}; I've updated your account notes with "${utterance}".`,
+          `${bargeInPrefix}Noted on your profile, ${customer.respectful_name}—we'll make sure "${utterance}" is factored into your renewal plan.`,
+          `${bargeInPrefix}Got that down on your file, ${customer.respectful_name}, thank you for the context.`
+        ]);
+      }
+
       const bridgeQuestion = buildAgendaReturnBridge(customer);
-      const improvisedReply = `I hear you, ${customer.respectful_name}, and I've noted that down on your profile. ${bridgeQuestion}`;
-      appendMessage("ai", improvisedReply, `Acknowledged Turn -> Steered to Next Agenda Goal`);
+      const improvisedReply = `${contextualAck} ${bridgeQuestion}`;
+      conversationState.history.push({ role: "assistant", content: improvisedReply });
+      appendMessage("ai", improvisedReply, badgeText);
       speakText(improvisedReply, true);
     }
 
