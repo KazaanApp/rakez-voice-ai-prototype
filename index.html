@@ -874,16 +874,19 @@
     }
 
     // =========================================================================
-    // 3. TURN-BASED VOICE & RESPONSE-ONLY RECORDING ENGINE
-    //    - While Noura speaks: SpeechRecognition is OFF (never records AI voice!)
-    //    - While Noura speaks: Mic volume monitor watches if user speaks loudly to barge in
-    //    - When Noura finishes: SpeechRecognition turns ON automatically for user's response,
-    //      waits for a 1.5s natural silence after user finishes speaking, then sends!
+    // 3. FULL-DUPLEX VOICE, INSTANT BARGE-IN & MOBILE-COMPATIBLE MIC ENGINE
+    //    - Fixes Mobile Mic: Avoids getUserMedia + SpeechRecognition hardware lock
+    //    - Fixes Laptop Interruption: Real-time barge-in stops Noura mid-sentence
+    //      on your very first spoken word without losing what you said!
     // =========================================================================
     let availableVoices = [];
     let activeRecognition = null;
     let isListeningForResponse = false;
     let responseSilenceTimer = null;
+    let currentAISpokenTextLower = "";
+    let speechStartedAt = 0;
+
+    const isMobileDevice = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
     function updateTurnBannerUI(mode, customText = null) {
       const banner = document.getElementById("turnStatusBanner");
@@ -895,18 +898,18 @@
       if (mode === "ai_speaking") {
         banner.className = "px-4 py-2.5 bg-sky-50 border-b border-sky-200 flex items-center justify-between text-xs transition-colors";
         dot.className = "w-2.5 h-2.5 rounded-full bg-sky-500 animate-pulse";
-        label.textContent = customText || "🔊 Noura is speaking... (Just speak up anytime if you want to interrupt)";
+        label.textContent = customText || "🔊 Noura is speaking... (Speak anytime to interrupt her naturally)";
         label.className = "font-bold text-sky-900";
-        pill.textContent = "Recording OFF (AI Turn)";
+        pill.textContent = "Barge-In Ready";
         pill.className = "px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-300 uppercase tracking-wider";
-        previewBar.classList.add("hidden");
-        previewBar.classList.remove("flex");
+        previewBar.classList.remove("hidden");
+        previewBar.classList.add("flex");
       } else if (mode === "listening_response") {
         banner.className = "px-4 py-2.5 bg-emerald-50 border-b border-emerald-200 flex items-center justify-between text-xs transition-colors";
         dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping";
-        label.textContent = customText || "🟢 Your Turn — Listening for your response (Speak naturally)...";
+        label.textContent = customText || "🟢 Your Turn — Listening (Speak naturally)...";
         label.className = "font-bold text-emerald-900";
-        pill.textContent = "● Recording Response ON";
+        pill.textContent = "● Mic Active";
         pill.className = "px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-600 text-white pulse-listen uppercase tracking-wider";
         previewBar.classList.remove("hidden");
         previewBar.classList.add("flex");
@@ -923,11 +926,27 @@
     }
 
     /**
-     * Requests microphone with hardware echoCancellation once when "Start Call" is clicked,
-     * and sets up a lightweight voice-onset monitor so if the user speaks loudly while Noura
-     * is talking, Noura stops immediately and switches to response recording!
+     * Mobile-Safe & Desktop Full-Duplex Audio Setup:
+     * - On Mobile: Do NOT keep a parallel getUserMedia stream open, because Android/iOS
+     *   locks the hardware microphone and blocks SpeechRecognition from hearing you!
+     * - On Desktop/Laptop: Uses a sensitive RMS time-domain voice detector so speaking
+     *   immediately barges in and stops Noura within <100ms.
      */
     async function initEchoCancelledMicStream() {
+      // Unlock speechSynthesis on mobile user gesture
+      if ("speechSynthesis" in window) {
+        try {
+          const warmUp = new SpeechSynthesisUtterance("");
+          warmUp.volume = 0;
+          window.speechSynthesis.speak(warmUp);
+        } catch (e) {}
+      }
+
+      // On mobile devices, skip persistent getUserMedia so SpeechRecognition gets exclusive mic access
+      if (isMobileDevice) {
+        return;
+      }
+
       if (micStream) return;
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
       try {
@@ -945,27 +964,28 @@
         const analyser = audioCtx.createAnalyser();
         analyser.fftSize = 512;
         source.connect(analyser);
-        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        const timeData = new Float32Array(analyser.fftSize);
 
         let consecutiveVoiceFrames = 0;
         const checkBargeIn = () => {
           if (!callActive) return;
-          if (isAISpeaking && !isListeningForResponse) {
-            analyser.getByteFrequencyData(dataArray);
-            // Measure human voice band energy (bins 4 to 45)
-            let sum = 0;
-            for (let i = 4; i < 45; i++) sum += dataArray[i];
-            const avg = sum / 41;
-            if (avg > 58) {
+          if (isAISpeaking) {
+            analyser.getFloatTimeDomainData(timeData);
+            let sumSquares = 0;
+            for (let i = 0; i < timeData.length; i++) {
+              sumSquares += timeData[i] * timeData[i];
+            }
+            const rms = Math.sqrt(sumSquares / timeData.length);
+            // Sensitive human voice RMS threshold (0.032) after 350ms of AI speech start
+            if (rms > 0.032 && (Date.now() - speechStartedAt > 350)) {
               consecutiveVoiceFrames++;
-              if (consecutiveVoiceFrames >= 4) {
-                // User started speaking over Noura -> natural interruption!
+              if (consecutiveVoiceFrames >= 3) {
                 consecutiveVoiceFrames = 0;
                 stopAllAudioPlayback(true);
-                startResponseRecordingWindow();
+                updateTurnBannerUI("listening_response", "🟢 Interrupted — Listening to you now...");
               }
             } else {
-              consecutiveVoiceFrames = 0;
+              consecutiveVoiceFrames = Math.max(0, consecutiveVoiceFrames - 1);
             }
           } else {
             consecutiveVoiceFrames = 0;
@@ -973,9 +993,7 @@
           bargeInMonitorId = requestAnimationFrame(checkBargeIn);
         };
         bargeInMonitorId = requestAnimationFrame(checkBargeIn);
-      } catch (e) {
-        // User denied or browser doesn't support getUserMedia; SpeechRecognition will still work
-      }
+      } catch (e) {}
     }
 
     function stopMicStream() {
@@ -1078,7 +1096,9 @@
       if (activeRecognition) {
         try {
           activeRecognition.onend = null;
-          activeRecognition.stop();
+          activeRecognition.onerror = null;
+          activeRecognition.onresult = null;
+          activeRecognition.abort();
         } catch (e) {}
         activeRecognition = null;
       }
@@ -1106,21 +1126,56 @@
     }
 
     /**
-     * Speaks Noura's turn while keeping Response Recording strictly OFF.
-     * As soon as Noura finishes speaking her turn, automatically opens the Response Recording window!
+     * Checks whether a recognized phrase while Noura is speaking is just speaker echo
+     * of Noura's own sentence or genuine customer barge-in speech.
+     */
+    function isLikelyAISpeakerEcho(heardText) {
+      if (!isAISpeaking || !currentAISpokenTextLower) return false;
+      const cleanHeard = heardText.toLowerCase().replace(/[^a-z0-9\s]/g, "").trim();
+      if (!cleanHeard) return true;
+      const bargeInTriggers = ["wait", "hold on", "stop", "actually", "question", "no", "yes", "sorry", "excuse me", "what about", "how much", "installment", "document", "ubo", "visa", "warehouse", "3-year", "three year"];
+      if (bargeInTriggers.some(w => cleanHeard.includes(w))) return false;
+      const words = cleanHeard.split(/\s+/).filter(w => w.length > 2);
+      if (words.length === 0) return false;
+      const matchedInAI = words.filter(w => currentAISpokenTextLower.includes(w));
+      return (matchedInAI.length / words.length) >= 0.75;
+    }
+
+    /**
+     * Speaks Noura's turn while keeping SpeechRecognition alive on desktop for instant
+     * word-level barge-in, and automatically activating on mobile right after speech.
      */
     async function speakText(rawText, openMicAfter = true) {
-      // Ensure response recording is OFF while Noura speaks!
-      stopResponseRecordingWindow();
       stopAllAudioPlayback(false);
 
       isAISpeaking = true;
+      speechStartedAt = Date.now();
+      const spokenText = formatForHumanSpeech(rawText);
+      currentAISpokenTextLower = spokenText.toLowerCase();
+
       const waveBox = document.getElementById("waveformBox");
       waveBox.classList.remove("hidden");
       waveBox.classList.add("flex");
       updateTurnBannerUI("ai_speaking");
 
-      const spokenText = formatForHumanSpeech(rawText);
+      if (isMobileDevice) {
+        stopResponseRecordingWindow();
+      } else if (callActive && openMicAfter && !activeRecognition) {
+        startResponseRecordingWindow();
+      }
+
+      const onSpeechFinished = () => {
+        if (!isAISpeaking) return;
+        isAISpeaking = false;
+        waveBox.classList.add("hidden");
+        waveBox.classList.remove("flex");
+        if (callActive && openMicAfter) {
+          updateTurnBannerUI("listening_response");
+          if (!activeRecognition) {
+            setTimeout(() => startResponseRecordingWindow(), isMobileDevice ? 120 : 50);
+          }
+        }
+      };
 
       // 1. Optional ElevenLabs Flash v2.5 Ultra-Human Voice
       const elevenKey = (document.getElementById("elevenLabsKeyInput")?.value || "").trim();
@@ -1147,12 +1202,7 @@
             audio.onended = () => {
               URL.revokeObjectURL(url);
               activeAudioPlayer = null;
-              isAISpeaking = false;
-              waveBox.classList.add("hidden");
-              waveBox.classList.remove("flex");
-              if (callActive && openMicAfter) {
-                setTimeout(() => startResponseRecordingWindow(), 250);
-              }
+              onSpeechFinished();
             };
             await audio.play();
             return;
@@ -1160,10 +1210,9 @@
         } catch (e) {}
       }
 
-      // 2. Built-in Browser Natural Neural Speech with Breath-Clause Prosody
+      // 2. Built-in Browser Natural Neural Speech (Single Utterance to prevent mobile onend stalls)
       if (!("speechSynthesis" in window)) {
-        isAISpeaking = false;
-        if (callActive && openMicAfter) startResponseRecordingWindow();
+        onSpeechFinished();
         return;
       }
 
@@ -1171,134 +1220,154 @@
         const bestVoice = getSelectedBrowserVoice();
         const isNaturalVoice = bestVoice && (bestVoice.name.includes("Natural") || bestVoice.name.includes("Online"));
 
-        const sentences = spokenText.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [spokenText];
-        sentences.forEach((sentence, idx) => {
-          const cleanChunk = sentence.trim();
-          if (!cleanChunk) return;
-          const utter = new SpeechSynthesisUtterance(cleanChunk);
-          if (bestVoice) utter.voice = bestVoice;
-          utter.lang = bestVoice?.lang || "en-US";
+        const utter = new SpeechSynthesisUtterance(spokenText);
+        if (bestVoice) utter.voice = bestVoice;
+        utter.lang = bestVoice?.lang || "en-US";
+        utter.rate = isNaturalVoice ? 1.02 : 0.99;
+        utter.pitch = isNaturalVoice ? 1.01 : 1.02;
 
-          if (isNaturalVoice) {
-            utter.rate = idx === 0 ? 1.02 : 1.0;
-            utter.pitch = idx === 0 ? 1.02 : 1.0;
-          } else {
-            utter.rate = idx === 0 ? 1.0 : 0.97;
-            utter.pitch = idx === 0 ? 1.04 : 1.01;
-          }
+        const estimatedDurationMs = Math.max(2500, spokenText.split(/\s+/).length * 420 + 1200);
+        const watchdog = setTimeout(() => {
+          if (isAISpeaking) onSpeechFinished();
+        }, estimatedDurationMs);
 
-          if (idx === sentences.length - 1) {
-            utter.onend = () => {
-              isAISpeaking = false;
-              waveBox.classList.add("hidden");
-              waveBox.classList.remove("flex");
-              if (callActive && openMicAfter) {
-                // Wait 250ms after Noura finishes so speaker echo clears, then turn ON recording for user's response!
-                setTimeout(() => startResponseRecordingWindow(), 250);
-              }
-            };
-            utter.onerror = () => {
-              isAISpeaking = false;
-              waveBox.classList.add("hidden");
-              waveBox.classList.remove("flex");
-              if (callActive && openMicAfter) {
-                setTimeout(() => startResponseRecordingWindow(), 250);
-              }
-            };
-          }
-          window.speechSynthesis.speak(utter);
-        });
+        utter.onend = () => {
+          clearTimeout(watchdog);
+          onSpeechFinished();
+        };
+        utter.onerror = () => {
+          clearTimeout(watchdog);
+          onSpeechFinished();
+        };
+
+        window.speechSynthesis.speak(utter);
       } catch (e) {
-        isAISpeaking = false;
-        if (callActive && openMicAfter) startResponseRecordingWindow();
+        onSpeechFinished();
       }
     }
 
     /**
-     * Opens the Microphone Recording Window ONLY for the customer's response.
-     * Uses continuous=true + a 1.5-second silence timer after the customer finishes speaking
-     * so they can speak naturally without getting cut off mid-sentence, and automatically
-     * stops recording and sends as soon as they finish their response!
+     * Full-Duplex SpeechRecognition Engine (Mobile & Desktop Compatible)
      */
-    function startResponseRecordingWindow() {
-      if (!callActive || isAISpeaking) return;
+    function startResponseRecordingWindow(fallbackLang = null) {
+      if (!callActive) return;
       const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRec) return;
+      if (!SpeechRec) {
+        showToast("SpeechRecognition is not supported in this browser. Please use Chrome or Edge.", true);
+        return;
+      }
 
       stopResponseRecordingWindow();
 
       try {
         const recognition = new SpeechRec();
         activeRecognition = recognition;
-        recognition.lang = document.getElementById("sttAccentSelect")?.value || "en-US";
-        recognition.continuous = true;
+
+        const selectedAccent = fallbackLang || document.getElementById("sttAccentSelect")?.value || "en-US";
+        recognition.lang = (isMobileDevice && selectedAccent === "en-AE") ? "en-US" : selectedAccent;
+        recognition.continuous = !isMobileDevice;
         recognition.interimResults = true;
-        recognition.maxAlternatives = 3;
+        recognition.maxAlternatives = 1;
 
         isListeningForResponse = true;
-        updateTurnBannerUI("listening_response");
+        if (!isAISpeaking) {
+          updateTurnBannerUI("listening_response");
+        }
 
         const liveInterim = document.getElementById("liveMicInterimText");
         const inputField = document.getElementById("customerInput");
-        liveInterim.textContent = "Listening for your response... speak naturally now";
+        liveInterim.textContent = isAISpeaking
+          ? "Barge-in active — speak anytime to interrupt Noura"
+          : "Listening for your response... speak naturally now";
 
         let finalizedText = "";
         let latestInterim = "";
 
         const commitCustomerResponse = () => {
           const fullHeard = normalizeTranscriptForRAKEZ((finalizedText + " " + latestInterim).trim());
+          finalizedText = "";
+          latestInterim = "";
           stopResponseRecordingWindow();
           if (fullHeard) {
             inputField.value = "";
             processCustomerUtterance(fullHeard);
           } else if (callActive && !isAISpeaking) {
-            // Customer hasn't spoken yet—keep listening quietly for their response
             startResponseRecordingWindow();
           }
         };
 
         recognition.onresult = (event) => {
           latestInterim = "";
+          let newFinalChunk = "";
           for (let i = event.resultIndex; i < event.results.length; ++i) {
             const chunk = event.results[i][0].transcript;
             if (event.results[i].isFinal) {
-              finalizedText += " " + chunk;
+              newFinalChunk += " " + chunk;
             } else {
               latestInterim += chunk;
             }
           }
+
+          const candidateHeard = (newFinalChunk + " " + latestInterim).trim();
+          if (isAISpeaking) {
+            if (isLikelyAISpeakerEcho(candidateHeard)) {
+              return;
+            }
+            stopAllAudioPlayback(true);
+            updateTurnBannerUI("listening_response", "🟢 Interrupted — Listening to you now...");
+          }
+
+          if (newFinalChunk) {
+            finalizedText += " " + newFinalChunk;
+          }
+
           const combined = normalizeTranscriptForRAKEZ((finalizedText + " " + latestInterim).trim());
           if (combined) {
             inputField.value = combined;
             liveInterim.textContent = `You: "${combined}"`;
 
-            // Reset the 1.45-second natural pause timer every time the user speaks a word
+            const wordCount = combined.split(/\s+/).length;
+            const pauseDelayMs = wordCount <= 4 ? 750 : 950;
+
             if (responseSilenceTimer) clearTimeout(responseSilenceTimer);
             responseSilenceTimer = setTimeout(() => {
               commitCustomerResponse();
-            }, 1450);
+            }, pauseDelayMs);
           }
         };
 
-        recognition.onerror = () => {
-          // If browser timed out on silence before user spoke, restart listening seamlessly while it's user's turn
-          if (callActive && isListeningForResponse && !isAISpeaking && !(finalizedText || latestInterim)) {
+        recognition.onerror = (event) => {
+          const err = event?.error || "";
+          if (err === "language-not-supported" && recognition.lang !== "en-US") {
+            startResponseRecordingWindow("en-US");
+            return;
+          }
+          if (err === "not-allowed" || err === "service-not-allowed") {
+            showToast("Microphone permission blocked! Please allow microphone access in your browser address bar.", true);
+            return;
+          }
+          if (callActive && !(finalizedText || latestInterim)) {
             setTimeout(() => {
-              if (callActive && !isAISpeaking) startResponseRecordingWindow();
-            }, 200);
+              if (callActive && (!isMobileDevice || !isAISpeaking)) {
+                startResponseRecordingWindow(recognition.lang);
+              }
+            }, 180);
           }
         };
 
         recognition.onend = () => {
           const combined = normalizeTranscriptForRAKEZ((finalizedText + " " + latestInterim).trim());
-          if (combined) {
+          if (combined && !isAISpeaking) {
             if (responseSilenceTimer) clearTimeout(responseSilenceTimer);
             stopResponseRecordingWindow();
             inputField.value = "";
             processCustomerUtterance(combined);
-          } else if (callActive && isListeningForResponse && !isAISpeaking) {
-            // Keep listening until the customer responds
-            try { recognition.start(); } catch (e) {}
+          } else if (callActive && isListeningForResponse && (!isMobileDevice || !isAISpeaking)) {
+            setTimeout(() => {
+              if (callActive && isListeningForResponse) {
+                startResponseRecordingWindow(recognition.lang);
+              }
+            }, 120);
           }
         };
 
@@ -1469,7 +1538,9 @@
       }
 
       // Initialize echo-cancelled mic stream on the user's click so automatic response recording & voice barge-in work hands-free!
+      callActive = true;
       await initEchoCancelledMicStream();
+      startResponseRecordingWindow();
 
       callAgenda.forEach(s => { s.completed = false; });
       renderAgendaChecklist();
