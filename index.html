@@ -1071,6 +1071,9 @@
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (!AudioCtx) return;
         const audioCtx = new AudioCtx();
+        if (audioCtx.state === "suspended") {
+          try { await audioCtx.resume(); } catch (e) {}
+        }
         const source = audioCtx.createMediaStreamSource(micStream);
         const analyser = audioCtx.createAnalyser();
         analyser.fftSize = 512;
@@ -1452,7 +1455,8 @@
 
           const clauseWatchdog = setTimeout(() => {
             if (myToken === ttsPlaybackToken && isAISpeaking) {
-              speakNextClause();
+              try { window.speechSynthesis.resume(); } catch (e) {}
+        setTimeout(() => speakNextClause(), 35);
             }
           }, Math.max(1800, clauseText.split(/\s+/).length * 420 + 900));
 
@@ -1768,11 +1772,7 @@
         return;
       }
 
-      // Initialize echo-cancelled mic stream on the user's click so automatic response recording & voice barge-in work hands-free!
       callActive = true;
-      await initEchoCancelledMicStream();
-      startResponseRecordingWindow();
-
       callAgenda.forEach(s => { s.completed = false; });
       renderAgendaChecklist();
 
@@ -1785,6 +1785,15 @@
       avatar.className = "w-11 h-11 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center text-lg pulse-call";
       document.getElementById("callStatusText").textContent = `RINGING ${customer.respectful_name.toUpperCase()}...`;
       updateTurnBannerUI("idle", `📲 Ringing ${customer.respectful_name} (${customer.phone_e164})...`);
+
+      // Non-blocking mic initialization (2s timeout guard so missing/blocked mic never stalls the call)
+      try {
+        await Promise.race([
+          initEchoCancelledMicStream(),
+          new Promise(r => setTimeout(r, 2000))
+        ]);
+        startResponseRecordingWindow();
+      } catch (micErr) {}
 
       playPhoneRingbackTone(1000);
       await new Promise(r => setTimeout(r, 1050));
@@ -2155,18 +2164,15 @@
 
       const agendaStatusText = callAgenda.map(s =>
         `- [${s.completed ? "COMPLETED" : "PENDING"}] id="${s.step_id}" | ${s.title} | Goal/Question: "${s.question_to_ask.replace(/\{respectful_name\}/g, customer.respectful_name).replace(/\{email\}/g, customer.email)}"`
-      ).join("
-");
+      ).join("\n");
 
       const offersText = customer.offers.map(o =>
         `- offer_id="${o.offer_id}" | ${o.short_label} (${o.discount}): ${o.description}`
-      ).join("
-");
+      ).join("\n");
 
       const playbooksText = backendScenarios.map(sc =>
         `- ${sc.name} (RM Transfer=${sc.requires_rm_transfer}): ${sc.response_template.replace(/\{respectful_name\}/g, customer.respectful_name)}`
-      ).join("
-");
+      ).join("\n");
 
       const pendingOfferNote = conversationState.pendingOfferConfirmation
         ? `PENDING OFFER AWAITING CONFIRMATION: ${conversationState.pendingOfferConfirmation.short_label} (offer_id="${conversationState.pendingOfferConfirmation.offer_id}")`
@@ -2304,7 +2310,7 @@ Return ONLY a valid JSON object matching this exact schema:
       }
 
       const isHoldWaitRequest = (
-        /(hold for|wait for|showed for|hold on|wait a|give me a|just a minute|just a second|just a moment|one minute|one second|one moment|for a minute|for a second|hold please|can you hold|could you hold|can you wait|hang on|be right back|let me check)/i.test(lower) ||
+        /\b(hold for|wait for|showed for|hold on|wait a|give me a|just a minute|just a second|just a moment|one minute|one second|one moment|for a minute|for a second|hold please|can you hold|could you hold|can you wait|hang on|be right back|let me check)\b/i.test(lower) ||
         ["wait", "hold", "pause", "hold on", "wait a minute", "one minute"].includes(cleanAlpha)
       );
       if (isHoldWaitRequest) {
@@ -2323,7 +2329,7 @@ Return ONLY a valid JSON object matching this exact schema:
       }
 
       if (
-        /(repeat|say that again|come again|pardon|didn't catch|did not catch|didn't hear|what did you say|speak slower|again please|didn't understand|don't understand|what do you mean)/i.test(lower) ||
+        /\b(repeat|say that again|come again|pardon|didn't catch|did not catch|didn't hear|what did you say|speak slower|again please|didn't understand|don't understand|what do you mean)\b/i.test(lower) ||
         ["what", "huh", "pardon", "repeat"].includes(cleanAlpha)
       ) {
         updateTurnModelTelemetry("Tier 0 (Instant)", "local-memory", "Instant Repeat / Clarification");
