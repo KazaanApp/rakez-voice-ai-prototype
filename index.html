@@ -176,27 +176,71 @@
           </div>
         </div>
 
-        <!-- Card 2: Natural Voice & Hands-Free Turn-Taking Settings -->
+        <!-- Card 2: Gemini AI Brain Connection & Voice Settings -->
         <div class="card-surface p-5">
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
               <span class="w-6 h-6 rounded-lg bg-teal-50 text-teal-700 font-bold text-xs flex items-center justify-center">2</span>
-              <h2 class="text-sm font-bold text-slate-900">Voice &amp; Hands-Free Call Settings</h2>
+              <h2 class="text-sm font-bold text-slate-900">Gemini AI Brain &amp; Voice</h2>
             </div>
-            <button id="testVoiceBtn" type="button" class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 transition">
-              🔊 Test Voice
-            </button>
+            <span id="geminiStatusBadge" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+              Offline Rules Mode
+            </span>
           </div>
 
           <div class="space-y-2.5 text-xs">
-            <div>
-              <label for="browserVoiceSelect" class="block text-slate-600 font-semibold mb-1">
-                AI Caller Voice (Prioritizes Natural Neural Voices)
-              </label>
-              <select id="browserVoiceSelect" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1.5 text-slate-900 font-medium text-xs focus:outline-none focus:border-teal-600">
-                <option value="auto">✨ Auto-Best Natural Neural Voice</option>
-              </select>
+            <!-- Direct Gemini API Connection & Context-Aware Model Router Box -->
+            <div class="p-3 rounded-xl bg-gradient-to-br from-slate-900 to-teal-950 text-white space-y-2 shadow-sm">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-teal-300 flex items-center gap-1">✨ Adaptive Gemini Model Router</span>
+                <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" class="text-[10px] text-emerald-300 underline hover:text-emerald-200">
+                  Get Free Key ↗
+                </a>
+              </div>
+              <div class="flex gap-1.5">
+                <input id="geminiKeyInputMain" type="password" placeholder="Paste Gemini API Key (AIzaSy...)" class="flex-1 bg-white/10 border border-white/20 rounded-lg px-2.5 py-1.5 text-white placeholder-slate-400 font-mono text-[11px] focus:outline-none focus:border-teal-400" />
+                <button id="connectGeminiBtn" type="button" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px] shrink-0 transition">
+                  Connect
+                </button>
+              </div>
+              <div>
+                <select id="geminiModelSelect" class="w-full bg-white/10 border border-white/20 rounded-lg px-2 py-1 text-[11px] text-slate-100 focus:outline-none">
+                  <option value="force_basic" selected class="text-slate-900">⚡ Basic Model Only (Fastest Flash-Lite • Default)</option>
+                  <option value="dynamic_router" class="text-slate-900">🧠 Smart Router (Basic-First • Auto-Escalates Complex)</option>
+                  <option value="force_advanced" class="text-slate-900">🚀 Advanced Model Only (Flagship Flash/Pro)</option>
+                </select>
+              </div>
+
+              <!-- Live Tier Mapping & Last-Turn Routing Telemetry -->
+              <div class="p-2 rounded-lg bg-black/25 border border-white/10 space-y-1 text-[10px]">
+                <div class="flex items-center justify-between text-slate-300">
+                  <span>Basic Tier (Routine):</span>
+                  <span id="basicModelTag" class="font-mono font-bold text-emerald-300">gemini-3.5-flash-lite</span>
+                </div>
+                <div class="flex items-center justify-between text-slate-300">
+                  <span>Advanced Tier (Complex):</span>
+                  <span id="advancedModelTag" class="font-mono font-bold text-amber-300">gemini-3.8-flash</span>
+                </div>
+                <div class="pt-1 border-t border-white/10 flex items-center justify-between">
+                  <span class="text-slate-400">Last Turn Used:</span>
+                  <span id="activeTurnModelPill" class="px-1.5 py-0.5 rounded bg-white/10 text-teal-200 font-mono font-semibold">Ready</span>
+                </div>
+              </div>
+
+              <p id="geminiConnectionHint" class="text-[10px] text-slate-300 leading-snug">
+                Running in <strong>Basic Model Only</strong> mode for ultra-fast ~300ms voice replies (switch to <strong>Smart Router</strong> anytime for auto-escalation on complex/legal turns).
+              </p>
             </div>
+
+            <div class="flex items-center justify-between pt-0.5">
+              <label for="browserVoiceSelect" class="text-slate-600 font-semibold">AI Caller Voice</label>
+              <button id="testVoiceBtn" type="button" class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 transition">
+                🔊 Test Voice
+              </button>
+            </div>
+            <select id="browserVoiceSelect" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1.5 text-slate-900 font-medium text-xs focus:outline-none focus:border-teal-600">
+              <option value="auto">✨ Auto-Best Natural Neural Voice</option>
+            </select>
 
             <div>
               <label for="sttAccentSelect" class="block text-slate-600 font-semibold mb-1">
@@ -208,10 +252,6 @@
                 <option value="en-IN">South Asian English (en-IN) + RAKEZ Phonetic Booster</option>
                 <option value="en-GB">British English (en-GB) + RAKEZ Phonetic Booster</option>
               </select>
-            </div>
-
-            <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-[11px] text-slate-600 leading-relaxed">
-              <strong>How the Call Works:</strong> While Noura speaks, recording is <strong>OFF</strong>. The moment she finishes her sentence, recording turns <strong>ON automatically</strong> for your response (and if you speak while she is talking, her voice stops automatically so she can listen to you).
             </div>
           </div>
         </div>
@@ -487,7 +527,7 @@
             <span class="text-[10px] px-2 py-0.5 rounded bg-teal-50 text-teal-700 font-semibold">Optional</span>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <input id="geminiKeyInput" type="password" placeholder="Gemini API Key (AIzaSy...)" class="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 font-mono text-[11px]" />
+            <input id="geminiKeyInput" type="password" placeholder="Synced with Main Gemini API Key (AIzaSy...)" class="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 font-mono text-[11px]" />
             <input id="elevenLabsKeyInput" type="password" placeholder="ElevenLabs API Key (optional)" class="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 font-mono text-[11px]" />
           </div>
         </div>
@@ -1169,6 +1209,7 @@
         .replace(/\b(porter 360|portal three sixty)\b/gi, "Portal 360")
         .replace(/\b(vises|pizza)\b/gi, "visa")
         .replace(/\b(noah|nora|laura)\b/gi, "Noura")
+        .replace(/\b(showed for a minute|cold for a minute|old for a minute|whole for a minute)\b/gi, "hold for a minute")
         .trim();
     }
 
@@ -1854,19 +1895,379 @@
       renderAgendaChecklist();
     }
 
+    let step3AskedCount = 0;
+    let resolvedModelTiers = {
+      basic: "gemini-3.5-flash-lite",
+      advanced: "gemini-3.8-flash"
+    };
+
+    function getStoredGeminiKey() {
+      const mainVal = (document.getElementById("geminiKeyInputMain")?.value || "").trim();
+      const tab2Val = (document.getElementById("geminiKeyInput")?.value || "").trim();
+      const savedVal = (localStorage.getItem("rakez_gemini_api_key") || "").trim();
+      return mainVal || tab2Val || savedVal;
+    }
+
+    function updateTurnModelTelemetry(tierLabel, modelId, reasonShort) {
+      const pill = document.getElementById("activeTurnModelPill");
+      if (!pill) return;
+      pill.textContent = `${tierLabel}: ${modelId}`;
+      pill.title = reasonShort || "";
+      if (tierLabel.includes("Tier 2") || tierLabel.includes("Advanced")) {
+        pill.className = "px-1.5 py-0.5 rounded bg-amber-500/25 border border-amber-400/40 text-amber-200 font-mono font-bold";
+      } else if (tierLabel.includes("Tier 1") || tierLabel.includes("Basic")) {
+        pill.className = "px-1.5 py-0.5 rounded bg-emerald-500/25 border border-emerald-400/40 text-emerald-200 font-mono font-bold";
+      } else {
+        pill.className = "px-1.5 py-0.5 rounded bg-sky-500/25 border border-sky-400/40 text-sky-200 font-mono font-bold";
+      }
+    }
+
+    function syncGeminiKeyUI(key, tiersObj = null) {
+      const mainInput = document.getElementById("geminiKeyInputMain");
+      const tab2Input = document.getElementById("geminiKeyInput");
+      const badge = document.getElementById("geminiStatusBadge");
+      const hint = document.getElementById("geminiConnectionHint");
+      const basicTag = document.getElementById("basicModelTag");
+      const advTag = document.getElementById("advancedModelTag");
+      const mode = document.getElementById("geminiModelSelect")?.value || "force_basic";
+
+      if (mainInput && mainInput.value !== key) mainInput.value = key;
+      if (tab2Input && tab2Input.value !== key) tab2Input.value = key;
+
+      const activeTiers = tiersObj || resolvedModelTiers;
+      if (basicTag) basicTag.textContent = activeTiers.basic;
+      if (advTag) advTag.textContent = activeTiers.advanced;
+
+      if (key && key.startsWith("AIza")) {
+        localStorage.setItem("rakez_gemini_api_key", key);
+        if (mode === "force_basic") {
+          badge.textContent = `● Basic Mode (${activeTiers.basic})`;
+          badge.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300";
+          if (hint) {
+            hint.innerHTML = `Locked on fast Basic model <strong>${activeTiers.basic}</strong> (~300ms low-latency voice). Switch dropdown to <strong>Smart Router</strong> if you want auto-upgrades on complex turns.`;
+          }
+        } else if (mode === "force_advanced") {
+          badge.textContent = `● Advanced Mode (${activeTiers.advanced})`;
+          badge.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300";
+          if (hint) {
+            hint.innerHTML = `Locked on flagship Advanced model <strong>${activeTiers.advanced}</strong> for deep multi-step reasoning on every turn.`;
+          }
+        } else {
+          badge.textContent = `● Smart Router (Basic-First)`;
+          badge.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300";
+          if (hint) {
+            hint.innerHTML = `Basic-first routing active: <strong>${activeTiers.basic}</strong> handles ~90% of turns; <strong>${activeTiers.advanced}</strong> triggers only on legal/escalation or compound commercial queries.`;
+          }
+        }
+      } else {
+        badge.textContent = "Offline Rules Mode";
+        badge.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200";
+      }
+    }
+
+    /**
+     * Queries Google's models.list endpoint to discover both:
+     *  - Tier 1 Basic Model (fastest lightweight Flash-Lite model)
+     *  - Tier 2 Advanced Model (flagship reasoning Flash/Pro model)
+     */
+    async function discoverActiveModelTiers(apiKey) {
+      const basicCandidates = [
+        "gemini-3.5-flash-lite",
+        "gemini-3.1-flash-lite",
+        "gemini-2.5-flash-lite",
+        "gemini-2.5-flash"
+      ];
+      const advancedCandidates = [
+        "gemini-3.8-flash",
+        "gemini-3.5-flash",
+        "gemini-2.5-pro",
+        "gemini-2.5-flash"
+      ];
+
+      try {
+        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`);
+        if (resp.ok) {
+          const data = await resp.json();
+          const available = (data.models || [])
+            .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes("generateContent"))
+            .map(m => m.name.replace(/^models\//, ""));
+
+          const foundBasic = basicCandidates.find(c => available.includes(c))
+            || available.find(n => n.includes("flash-lite") && !n.includes("tts") && !n.includes("image"))
+            || available.find(n => n.includes("flash") && !n.includes("tts") && !n.includes("image"))
+            || "gemini-3.5-flash-lite";
+
+          const foundAdvanced = advancedCandidates.find(c => available.includes(c))
+            || available.find(n => (n.includes("pro") || n.includes("3.8-flash") || n.includes("3.5-flash")) && !n.includes("lite") && !n.includes("tts") && !n.includes("image"))
+            || foundBasic;
+
+          resolvedModelTiers = { basic: foundBasic, advanced: foundAdvanced };
+          return resolvedModelTiers;
+        }
+      } catch (e) {}
+
+      return resolvedModelTiers;
+    }
+
+    async function verifyAndConnectGeminiKey() {
+      const key = getStoredGeminiKey();
+      if (!key || !key.startsWith("AIza")) {
+        showToast("Please paste a valid Google AI Studio API key starting with 'AIza...'", true);
+        return;
+      }
+
+      const btn = document.getElementById("connectGeminiBtn");
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Testing...";
+      }
+
+      try {
+        const tiers = await discoverActiveModelTiers(key);
+        const testResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(tiers.basic)}:generateContent?key=${encodeURIComponent(key)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: "Reply with OK" }] }],
+            generationConfig: { maxOutputTokens: 10 }
+          })
+        });
+
+        if (testResp.ok) {
+          syncGeminiKeyUI(key, tiers);
+          const mode = document.getElementById("geminiModelSelect")?.value || "force_basic";
+          updateTurnModelTelemetry(
+            mode === "force_advanced" ? "Tier 2 Ready" : "Tier 1 Ready",
+            mode === "force_advanced" ? tiers.advanced : tiers.basic,
+            "Connected"
+          );
+          showToast(`Connected! Basic Model (${tiers.basic}) is active and ready.`);
+        } else {
+          const errData = await testResp.json().catch(() => ({}));
+          const errMsg = errData?.error?.message || `HTTP ${testResp.status}`;
+          showToast(`Gemini API Error (${tiers.basic}): ${errMsg}`, true);
+        }
+      } catch (err) {
+        showToast("Network error connecting to Gemini API. Check your internet connection.", true);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "Connect";
+        }
+      }
+    }
+
+    /**
+     * Basic-First Model Selector:
+     * - Defaults to 'force_basic' so all turns run on the fast Flash-Lite model (~300ms).
+     * - In 'dynamic_router' (Basic-First Smart Router) mode, stays on Basic for ~90%+ of turns
+     *   and ONLY upgrades to Advanced on strict regulatory/escalation triggers or complex
+     *   multi-part commercial negotiations (>= 2 complexity signals).
+     */
+    function selectDynamicModelForContext(utterance, customer, interruptedMidSpeech, wasOnHoldWait) {
+      const routingMode = document.getElementById("geminiModelSelect")?.value || "force_basic";
+      if (routingMode === "force_basic") {
+        return {
+          tier: "Tier 1 (Basic)",
+          modelId: resolvedModelTiers.basic,
+          reason: "Basic Model Mode",
+          isAdvanced: false
+        };
+      }
+      if (routingMode === "force_advanced") {
+        return {
+          tier: "Tier 2 (Advanced)",
+          modelId: resolvedModelTiers.advanced,
+          reason: "Advanced Model Mode",
+          isAdvanced: true
+        };
+      }
+
+      const lower = utterance.toLowerCase().trim();
+      const words = lower.split(/\s+/).filter(Boolean);
+
+      // Immediate escalation / legal policy keywords always justify Tier 2
+      const mandatoryEscalationRegex = /\b(liquidat|deregister|cancel license|shareholder dispute|legal freeze|court order|lawsuit|relationship manager|relationship officer|supervisor|human agent)\b/i;
+      if (mandatoryEscalationRegex.test(lower)) {
+        return {
+          tier: "Tier 2 (Advanced)",
+          modelId: resolvedModelTiers.advanced,
+          reason: "Mandatory Policy / RM Escalation Check",
+          isAdvanced: true
+        };
+      }
+
+      // Aggressive Basic-First scoring: require >= 2 complexity signals before leaving Basic
+      let complexityScore = 0;
+      const reasons = [];
+
+      if (/\b(frustrated|fed up|unacceptable|ridiculous|terrible|worst service|angry|furious)\b/i.test(lower)) {
+        complexityScore += 2;
+        reasons.push("High Sentiment / Escalation Guard");
+      }
+
+      if (/\b(compare|difference|combine|installment|monthly|payment plan|negotiate|corporate tax|vat|audit|calculate|breakdown)\b/i.test(lower)) {
+        complexityScore += 1;
+        reasons.push("Commercial / Financial Calculation");
+      }
+
+      const questionMarkCount = (utterance.match(/\?/g) || []).length;
+      const hasCompoundConjunctions = /\b(and also|as well as|on top of that|but what about|at the same time)\b/i.test(lower);
+      if (questionMarkCount >= 2 || hasCompoundConjunctions) {
+        complexityScore += 1;
+        reasons.push("Multi-Part Compound Question");
+      }
+
+      if (words.length >= 22) {
+        complexityScore += 1;
+        reasons.push("Long Multi-Clause Query");
+      }
+
+      if (complexityScore >= 2) {
+        return {
+          tier: "Tier 2 (Advanced)",
+          modelId: resolvedModelTiers.advanced,
+          reason: reasons[0] || "High-Complexity Context",
+          isAdvanced: true
+        };
+      }
+
+      return {
+        tier: "Tier 1 (Basic)",
+        modelId: resolvedModelTiers.basic,
+        reason: "Fast Basic Turn",
+        isAdvanced: false
+      };
+    }
+
+    /**
+     * Primary Gemini Autonomous Conversational Brain with Dynamic Model Routing:
+     */
+    async function runGeminiPrimaryBrain(customer, utterance, interruptedMidSpeech, wasOnHoldWait) {
+      const apiKey = getStoredGeminiKey();
+      if (!apiKey || !apiKey.startsWith("AIza")) return null;
+
+      await discoverActiveModelTiers(apiKey);
+      const routeDecision = selectDynamicModelForContext(utterance, customer, interruptedMidSpeech, wasOnHoldWait);
+      const modelName = routeDecision.modelId;
+
+      updateTurnModelTelemetry(routeDecision.tier, modelName, routeDecision.reason);
+
+      const agendaStatusText = callAgenda.map(s =>
+        `- [${s.completed ? "COMPLETED" : "PENDING"}] id="${s.step_id}" | ${s.title} | Goal/Question: "${s.question_to_ask.replace(/\{respectful_name\}/g, customer.respectful_name).replace(/\{email\}/g, customer.email)}"`
+      ).join("
+");
+
+      const offersText = customer.offers.map(o =>
+        `- offer_id="${o.offer_id}" | ${o.short_label} (${o.discount}): ${o.description}`
+      ).join("
+");
+
+      const playbooksText = backendScenarios.map(sc =>
+        `- ${sc.name} (RM Transfer=${sc.requires_rm_transfer}): ${sc.response_template.replace(/\{respectful_name\}/g, customer.respectful_name)}`
+      ).join("
+");
+
+      const pendingOfferNote = conversationState.pendingOfferConfirmation
+        ? `PENDING OFFER AWAITING CONFIRMATION: ${conversationState.pendingOfferConfirmation.short_label} (offer_id="${conversationState.pendingOfferConfirmation.offer_id}")`
+        : "None";
+
+      const systemInstruction = `You are Noura, a warm, sharp, natural human Senior Client Relations Specialist calling from RAKEZ (Ras Al Khaimah Economic Zone) in the UAE.
+You are on a live phone call with ${customer.respectful_name} (Full Name: ${customer.full_name}, Company: ${customer.company_name}, Zone: ${customer.segment}, Email: ${customer.email}).
+Always address them naturally as "${customer.respectful_name}"—never address a human by their company LLC name.
+
+ACTIVE ROUTING TIER FOR THIS TURN: ${routeDecision.tier} (${modelName}) — Reason: ${routeDecision.reason}
+
+ELIGIBLE PORTAL 360 OFFERS FOR THIS CUSTOMER:
+${offersText}
+${pendingOfferNote}
+
+CALL AGENDA CHECKLIST (Steer smoothly through PENDING items after answering the customer's question):
+${agendaStatusText}
+
+TOPIC-CHANGE PLAYBOOKS & KNOWLEDGE:
+${playbooksText}
+
+3 STRICT RELATIONSHIP OFFICER ESCALATION RULES (ONLY set action="transfer_to_rm" if one of these 3 happens):
+- Rule 1: Customer explicitly asks to speak to a Relationship Manager / Officer / human agent.
+- Rule 2: Customer expresses severe anger/dissatisfaction and refuses to continue.
+- Rule 3: Regulated legal/corporate action (company liquidation, license cancellation/deregistration, shareholder dispute, court freeze).
+
+LIVE CALL CONTEXT FLAGS:
+- Customer interrupted you mid-sentence just now: ${interruptedMidSpeech}
+- Customer was previously on Hold/Wait and just spoke: ${wasOnHoldWait}
+
+CONVERSATIONAL RULES:
+1. Understand the customer's true intent naturally—even if they interrupted you, asked you to hold/wait, asked you to continue, asked to repeat, asked a multi-part question, or changed the topic.
+2. NEVER parrot the customer's words back inside quotation marks.
+3. Vary your phrasing naturally like a real human specialist—never repeat the exact same sentence twice.
+4. Keep "spoken_reply" concise and natural for voice (${routeDecision.isAdvanced ? "2 to 3 clear, helpful sentences covering all parts of their question" : "1 to 2 natural conversational sentences"}).
+5. Only create a Portal 360 ticket (action="confirm_offer", "create_service_request", or "create_complaint") when the customer actually confirms an offer or requests a genuine RAKEZ service/issue.
+
+Return ONLY a valid JSON object matching this exact schema:
+{
+  "spoken_reply": "string (what Noura says aloud)",
+  "action": "none | hold_call | resume_call | confirm_offer | ask_offer_confirmation | create_service_request | create_complaint | log_csat | transfer_to_rm | end_call",
+  "completed_step_ids": ["array of step_id strings completed in this turn"],
+  "offer_id": "string or null (matched offer_id if applicable)",
+  "ticket_summary": "string or null (short CRM summary if creating a ticket)",
+  "csat_rating": "integer 1-5 or null",
+  "rm_transfer_rule": "string or null (e.g. 'Rule 1: Customer Request')"
+}`;
+
+      const contents = conversationState.history.slice(-8).map(m => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content }]
+      }));
+
+      try {
+        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelName)}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: systemInstruction }] },
+            contents: contents,
+            generationConfig: {
+              temperature: routeDecision.isAdvanced ? 0.55 : 0.65,
+              maxOutputTokens: routeDecision.isAdvanced ? 340 : 220,
+              responseMimeType: "application/json"
+            }
+          })
+        });
+
+        if (!resp.ok) {
+          return null;
+        }
+
+        const data = await resp.json();
+        const rawJsonText = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+        if (!rawJsonText) return null;
+
+        const cleanedJson = rawJsonText.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
+        const parsed = JSON.parse(cleanedJson);
+        if (parsed && parsed.spoken_reply) {
+          syncGeminiKeyUI(apiKey, resolvedModelTiers);
+          return { parsed, routeDecision };
+        }
+      } catch (err) {
+        return null;
+      }
+      return null;
+    }
+
     async function processCustomerUtterance(rawUtterance) {
       const utterance = normalizeTranscriptForRAKEZ(rawUtterance);
       if (!utterance) return;
 
-      // Capture whether the user interrupted Noura mid-sentence
       const interruptedMidSpeech = isAISpeaking || conversationState.wasInterrupted;
+      const wasOnHoldWait = customerOnHoldWait;
+
       if (isAISpeaking) {
         stopAllAudioPlayback(true);
       }
       conversationState.wasInterrupted = false;
       customerOnHoldWait = false;
 
-      // Clear turn buffers while Noura processes and speaks her reply
       clearTurnTranscriptBuffers();
       if (isMobileDevice) {
         stopResponseRecordingWindow();
@@ -1882,107 +2283,247 @@
       conversationState.history.push({ role: "user", content: utterance });
 
       const lower = utterance.toLowerCase().trim();
+      const cleanAlpha = lower.replace(/[^a-z0-9\s]/g, "").trim();
       const customer = getActiveCustomer();
       const simTime = "11:30";
 
-      // Dynamically varied, natural human interruption prefix (never repeats the same line!)
+      // =======================================================================
+      // 1. TIER 0: INSTANT LOCAL DETERMINISTIC ENGINE (~0ms, $0 API cost)
+      //    Handles immediate regulatory DNC opt-out, Hold/Wait, and Repeat
+      //    with zero network latency!
+      // =======================================================================
+      if (lower.includes("stop calling") || lower.includes("dnc") || lower.includes("remove me") || lower.includes("do not call") || lower.includes("take me off")) {
+        customer.dnc_opted_out = true;
+        renderComplianceAndCustomerUI();
+        updateTurnModelTelemetry("Tier 0 (Instant)", "local-compliance", "TDRA DNC Opt-Out");
+        const reply = `I completely understand, ${customer.respectful_name}—sorry to catch you at an inconvenient time. I've added your number to our Do Not Call list per UAE regulations, so you won't receive any further outreach calls from us. Wishing you a great day!`;
+        appendMessage("ai", reply, "🚀 Tier 0 Instant (<5ms) • TDRA Do-Not-Call Opt-Out Recorded");
+        speakText(reply, false);
+        endActiveCall("Customer Opted Out (DNC)");
+        return;
+      }
+
+      const isHoldWaitRequest = (
+        /(hold for|wait for|showed for|hold on|wait a|give me a|just a minute|just a second|just a moment|one minute|one second|one moment|for a minute|for a second|hold please|can you hold|could you hold|can you wait|hang on|be right back|let me check)/i.test(lower) ||
+        ["wait", "hold", "pause", "hold on", "wait a minute", "one minute"].includes(cleanAlpha)
+      );
+      if (isHoldWaitRequest) {
+        customerOnHoldWait = true;
+        updateTurnModelTelemetry("Tier 0 (Instant)", "local-control", "Hold / Pause Control");
+        const holdReply = pickVariedPhrase("hold_wait_reply", [
+          `Of course, ${customer.respectful_name}—take your time! I'll hold right here on the line until you're ready.`,
+          `No problem at all, ${customer.respectful_name}. I'm pausing right here—just say "continue" or let me know whenever you're back.`,
+          `Sure thing, ${customer.respectful_name}, take all the time you need. I'll wait right here for you.`,
+          `Absolutely, ${customer.respectful_name}—I've paused the call on my end. Go ahead whenever you're ready.`
+        ]);
+        conversationState.history.push({ role: "assistant", content: holdReply });
+        appendMessage("ai", holdReply, "🚀 Tier 0 Instant (<5ms) • Paused on Hold");
+        speakText(holdReply, true, false);
+        return;
+      }
+
+      if (
+        /(repeat|say that again|come again|pardon|didn't catch|did not catch|didn't hear|what did you say|speak slower|again please|didn't understand|don't understand|what do you mean)/i.test(lower) ||
+        ["what", "huh", "pardon", "repeat"].includes(cleanAlpha)
+      ) {
+        updateTurnModelTelemetry("Tier 0 (Instant)", "local-memory", "Instant Repeat / Clarification");
+        const offerSummary = customer.offers.map(o => `${o.short_label} (${o.discount})`).join(", and ");
+        const repeatIntro = pickVariedPhrase("repeat_intro", [
+          `Certainly, ${customer.respectful_name}—let me explain that more clearly:`,
+          `My apologies if I went too fast, ${customer.respectful_name}! Here's what I was saying:`,
+          `Of course, ${customer.respectful_name}, happy to repeat that:`
+        ]);
+        const repeatBody = lastSubstantiveAIReply
+          ? lastSubstantiveAIReply
+          : `You pre-qualify for ${offerSummary} on your Portal 360 profile, and I can activate either package for you right here on the call.`;
+        const repeatReply = `${repeatIntro} ${repeatBody}`;
+        conversationState.history.push({ role: "assistant", content: repeatReply });
+        appendMessage("ai", repeatReply, "🚀 Tier 0 Instant (<5ms) • Repeated Previous Statement");
+        speakText(repeatReply, true, false);
+        return;
+      }
+
+      // =======================================================================
+      // 2. TIER 1 (BASIC) ↔ TIER 2 (ADVANCED) DYNAMIC GEMINI ROUTER
+      // =======================================================================
+      const geminiResult = await runGeminiPrimaryBrain(customer, utterance, interruptedMidSpeech, wasOnHoldWait);
+      if (geminiResult && geminiResult.parsed) {
+        const g = geminiResult.parsed;
+        const route = geminiResult.routeDecision;
+        const tierIcon = route.isAdvanced ? "🧠" : "⚡";
+        const tierBadgePrefix = `${tierIcon} ${route.tier} (${route.modelId}) • ${route.reason}`;
+
+        if (Array.isArray(g.completed_step_ids)) {
+          g.completed_step_ids.forEach(sid => markAgendaStepCompleted(sid));
+        }
+        checkCustomAgendaKeywords(lower);
+        checkCustomAgendaKeywords(g.spoken_reply.toLowerCase());
+
+        let actionBadge = tierBadgePrefix;
+
+        if (g.action === "hold_call") {
+          customerOnHoldWait = true;
+          conversationState.history.push({ role: "assistant", content: g.spoken_reply });
+          appendMessage("ai", g.spoken_reply, `${tierBadgePrefix} • Paused on Hold`);
+          speakText(g.spoken_reply, true, false);
+          return;
+        }
+
+        if (g.action === "ask_offer_confirmation" && g.offer_id) {
+          const matched = customer.offers.find(o => o.offer_id === g.offer_id) || customer.offers[0];
+          conversationState.pendingOfferConfirmation = matched;
+          actionBadge = `${tierBadgePrefix} • Confirming ${matched.short_label}`;
+        } else if (g.action === "confirm_offer") {
+          const matched = (g.offer_id && customer.offers.find(o => o.offer_id === g.offer_id))
+            || conversationState.pendingOfferConfirmation
+            || customer.offers[0];
+          const srId = "SR-360-" + Math.random().toString(16).substring(2, 6).toUpperCase();
+          ticketsState.push({
+            ticket_id: srId,
+            customer_id: customer.customer_id,
+            type: "Service Request",
+            priority: "Normal",
+            summary: `Confirmed Offer: ${matched.title} (${matched.discount})`,
+            channel: `Voice AI (${route.modelId})`,
+            time: `${simTime} GST`
+          });
+          conversationState.pendingOfferConfirmation = null;
+          markAgendaStepCompleted("STEP_1_GREETING_CONSENT");
+          markAgendaStepCompleted("STEP_2_PITCH_OFFERS");
+          markAgendaStepCompleted("STEP_3_CONFIRM_SELECTION");
+          renderCRMLists();
+          actionBadge = `${tierBadgePrefix} • Logged ${srId}`;
+        } else if (g.action === "create_service_request" || g.action === "create_complaint") {
+          const isCmp = g.action === "create_complaint";
+          const tId = (isCmp ? "CMP-360-" : "SR-360-") + Math.random().toString(16).substring(2, 6).toUpperCase();
+          ticketsState.push({
+            ticket_id: tId,
+            customer_id: customer.customer_id,
+            type: isCmp ? "Complaint" : "Service Request",
+            priority: isCmp ? "High" : "Normal",
+            summary: g.ticket_summary || `${customer.respectful_name}: ${utterance.slice(0, 42)}`,
+            channel: `Voice AI (${route.modelId})`,
+            time: `${simTime} GST`
+          });
+          renderCRMLists();
+          actionBadge = `${tierBadgePrefix} • Logged ${tId}`;
+        } else if (g.action === "log_csat" && g.csat_rating) {
+          const ratingNum = Math.min(5, Math.max(1, parseInt(g.csat_rating, 10) || 5));
+          const fbId = "CSAT-" + Math.random().toString(16).substring(2, 6).toUpperCase();
+          feedbacksState.push({
+            feedback_id: fbId,
+            rating: ratingNum,
+            sentiment: ratingNum >= 4 ? "Positive" : ratingNum === 3 ? "Neutral" : "Dissatisfied",
+            comment: utterance
+          });
+          markAgendaStepCompleted("STEP_4_CAPTURE_CSAT");
+          renderCRMLists();
+          actionBadge = `${tierBadgePrefix} • Logged ${ratingNum}/5 CSAT`;
+        } else if (g.action === "transfer_to_rm") {
+          const ruleLabel = g.rm_transfer_rule || "Relationship Officer Escalation";
+          executeWarmTransferToRM(customer, ruleLabel, g.ticket_summary || utterance, utterance);
+          conversationState.history.push({ role: "assistant", content: g.spoken_reply });
+          appendMessage("ai", g.spoken_reply, `${tierBadgePrefix} • Transferred to RM`);
+          speakText(g.spoken_reply, false);
+          endActiveCall("Transferred to Relationship Officer");
+          return;
+        } else if (g.action === "end_call") {
+          markAgendaStepCompleted("STEP_5_CHECK_ISSUES_CLOSE");
+          conversationState.history.push({ role: "assistant", content: g.spoken_reply });
+          appendMessage("ai", g.spoken_reply, `${tierBadgePrefix} • Call Completed`);
+          speakText(g.spoken_reply, false);
+          endActiveCall("Call Completed");
+          return;
+        }
+
+        conversationState.introCompleted = true;
+        conversationState.history.push({ role: "assistant", content: g.spoken_reply });
+        appendMessage("ai", g.spoken_reply, actionBadge);
+        speakText(g.spoken_reply, true);
+        return;
+      }
+
+      // =======================================================================
+      // 3. BUILT-IN OFFLINE NLU FALLBACK (When no Gemini API key is set)
+      // =======================================================================
+      const offlineRoute = selectDynamicModelForContext(utterance, customer, interruptedMidSpeech, wasOnHoldWait);
+      updateTurnModelTelemetry("Offline Rules", offlineRoute.isAdvanced ? "complex-rule" : "basic-rule", offlineRoute.reason);
+
       const bargeInPrefix = interruptedMidSpeech
         ? pickVariedPhrase("barge_in_prefix", [
             `Oh, sorry ${customer.respectful_name}—`,
             `Pardon me, ${customer.respectful_name}—`,
             `Of course, ${customer.respectful_name}—`,
-            `Jumping right to that, ${customer.respectful_name}—`,
-            `My apologies for overlapping, ${customer.respectful_name}—`
+            `Right away, ${customer.respectful_name}—`
           ]) + " "
         : "";
 
       checkCustomAgendaKeywords(lower);
 
-      // 0A. "WAIT A MINUTE" / "HOLD ON" / "GIVE ME A SECOND" PAUSE HANDLER
-      // When customer asks Noura to wait/hold, she stops immediately, acknowledges briefly,
-      // and enters Hold/Wait mode WITHOUT pushing any agenda question!
-      const isHoldWaitRequest = (
-        /\b(wait a minute|wait a second|wait a moment|hold on|give me a minute|give me a second|just a minute|just a second|one minute|one second|hold please|pause|let me check|hang on)\b/i.test(lower) ||
-        ["wait", "hold", "pause"].includes(lower.replace(/[^a-z]/g, ""))
+      // Resume / Continue
+      const isContinueOrResume = (
+        /^(continue|go ahead|carry on|go on|proceed|resume|keep going|im back|i am back|im ready|i am ready|okay continue|yes continue|please continue|you can continue|next|move on|what else|tell me more)$/i.test(cleanAlpha) ||
+        (wasOnHoldWait && /^(okay|ok|yes|yeah|hello|hi|ready|done|back|go|alright)$/i.test(cleanAlpha))
       );
-      if (isHoldWaitRequest) {
-        customerOnHoldWait = true;
-        const holdReply = pickVariedPhrase("hold_wait_reply", [
-          `Of course, ${customer.respectful_name}—take your time! I'll hold right here until you're ready.`,
-          `No rush at all, ${customer.respectful_name}. Just let me know whenever you're ready to continue.`,
-          `Sure thing, ${customer.respectful_name}, I'm pausing right here. Take all the time you need.`,
-          `Absolutely, ${customer.respectful_name}—I'm on the line, go ahead whenever you're set.`
-        ]);
-        conversationState.history.push({ role: "assistant", content: holdReply });
-        appendMessage("ai", holdReply, "Paused on Hold at Customer Request (No Agenda Push)");
-        speakText(holdReply, true, false);
+      if (isContinueOrResume) {
+        conversationState.introCompleted = true;
+        markAgendaStepCompleted("STEP_1_GREETING_CONSENT");
+
+        const currentPending = getNextPendingAgendaStep();
+        if (!wasOnHoldWait && currentPending && currentPending.step_id === "STEP_3_CONFIRM_SELECTION" && step3AskedCount >= 1) {
+          markAgendaStepCompleted("STEP_3_CONFIRM_SELECTION");
+        }
+
+        if (!callAgenda[1].completed) {
+          markAgendaStepCompleted("STEP_2_PITCH_OFFERS");
+          conversationState.offersPresented = true;
+          const resumeIntro = wasOnHoldWait
+            ? `Welcome back, ${customer.respectful_name}! Picking up right where we left off—your profile is pre-approved for 15% off our 3-Year License Renewal package with 2 free visa quotas, as well as 3 months rent-free on Al Hamra warehouse expansion. Which of those sounds more helpful for your plans?`
+            : `Sure thing, ${customer.respectful_name}! Looking at your Portal 360 profile, you pre-qualify for 15% off our 3-Year License Renewal package plus 2 free visa quotas, or 3 months rent-free on an Al Hamra warehouse expansion. Do either of those fit your plans this year?`;
+          step3AskedCount = 1;
+          conversationState.history.push({ role: "assistant", content: resumeIntro });
+          appendMessage("ai", resumeIntro, wasOnHoldWait ? "Resumed Call from Hold -> Shared Offers" : "Continued Call Flow -> Shared Offers");
+          speakText(resumeIntro, true);
+          return;
+        }
+
+        const nextBridge = buildAgendaReturnBridge(customer);
+        if (getNextPendingAgendaStep()?.step_id === "STEP_3_CONFIRM_SELECTION") {
+          step3AskedCount++;
+        }
+        const resumePrefix = wasOnHoldWait
+          ? `Welcome back, ${customer.respectful_name}! Picking up right where we left off—`
+          : `Sure thing, ${customer.respectful_name}! Moving right along—`;
+
+        const resumeReply = `${resumePrefix} ${nextBridge.charAt(0).toLowerCase() + nextBridge.slice(1)}`;
+        conversationState.history.push({ role: "assistant", content: resumeReply });
+        appendMessage("ai", resumeReply, wasOnHoldWait ? "Resumed Smoothly After Hold" : "Continued to Next Agenda Step");
+        speakText(resumeReply, true);
         return;
       }
 
-      // 0B. Handle short incomplete starter fragments ("I need", "I want", "Can I ask", "Actually", "Let me ask")
-      const strippedWords = lower.replace(/[^a-z0-9\s]/g, "").trim().split(/\s+/).filter(Boolean);
+      // Short Incomplete Starter Fragments
+      const strippedWords = cleanAlpha.split(/\s+/).filter(Boolean);
       const isShortFragment = (
         strippedWords.length <= 3 &&
         (
-          /^(i need|i want|i would like|can i|what about|excuse me|listen|sorry|actually|let me|i have a|quick question)$/i.test(lower.replace(/[^a-z\s]/gi, "").trim()) ||
+          /^(i need|i want|i would like|can i|what about|excuse me|listen|sorry|actually|let me|i have a|quick question|one question)$/i.test(cleanAlpha) ||
           ["need", "want"].includes(strippedWords[strippedWords.length - 1])
         )
       );
       if (isShortFragment) {
         const promptMore = pickVariedPhrase("yield_floor_reply", [
           `Please go ahead, ${customer.respectful_name}—what can I help you with?`,
-          `I'm all ears, ${customer.respectful_name}, tell me what you need.`,
-          `Of course, ${customer.respectful_name}—go right ahead, what's on your mind?`,
-          `Sure thing, ${customer.respectful_name}, what would you like to look into?`
+          `I'm listening, ${customer.respectful_name}—tell me what you need.`,
+          `Of course, ${customer.respectful_name}, go right ahead—what's your question?`
         ]);
         conversationState.history.push({ role: "assistant", content: promptMore });
-        appendMessage("ai", promptMore, "Yielded Floor • Listening for Customer's Full Question");
+        appendMessage("ai", promptMore, "Yielded Floor • Listening for Customer's Question");
         speakText(promptMore, true, false);
         return;
       }
 
-      // 0C. Handle Repeat / Clarification Requests ("can you repeat", "say that again", "pardon", "what did you say")
-      if (
-        lower.includes("repeat") ||
-        lower.includes("say that again") ||
-        lower.includes("come again") ||
-        lower.includes("pardon") ||
-        lower.includes("didn't catch") ||
-        lower.includes("did not catch") ||
-        lower.includes("didn't hear") ||
-        lower.includes("what did you say") ||
-        lower.includes("speak slower") ||
-        lower.includes("again please")
-      ) {
-        const offerSummary = customer.offers.map(o => `${o.short_label} (${o.discount})`).join(", and ");
-        const repeatIntro = pickVariedPhrase("repeat_intro", [
-          `Certainly, ${customer.respectful_name}—let me go over that clearly for you:`,
-          `My apologies if I spoke too quickly, ${customer.respectful_name}! Here is what I shared:`,
-          `Of course, ${customer.respectful_name}, happy to repeat that:`,
-          `Sure thing, ${customer.respectful_name}—in short:`
-        ]);
-        const repeatBody = lastSubstantiveAIReply
-          ? lastSubstantiveAIReply
-          : `You pre-qualify for ${offerSummary} on your Portal 360 profile, and I can lock either of those in for you right here on the call.`;
-        const repeatReply = `${repeatIntro} ${repeatBody}`;
-        conversationState.history.push({ role: "assistant", content: repeatReply });
-        appendMessage("ai", repeatReply, "Repeated Previous Point Clearly");
-        speakText(repeatReply, true, false);
-        return;
-      }
-
-      // 1. DNC Opt-Out
-      if (lower.includes("stop calling") || lower.includes("dnc") || lower.includes("remove me") || lower.includes("do not call") || lower.includes("take me off")) {
-        customer.dnc_opted_out = true;
-        renderComplianceAndCustomerUI();
-        const reply = `I completely understand, ${customer.respectful_name}—sorry to catch you at an inconvenient time. I've added your number to our Do Not Call list per UAE regulations, so you won't receive any further outreach calls from us. Wishing you a great day!`;
-        appendMessage("ai", reply, "TDRA Do-Not-Call Opt-Out Recorded");
-        speakText(reply, false);
-        endActiveCall("Customer Opted Out (DNC)");
-        return;
-      }
-
-      // 2. Check the 3 Special Relationship Officer Escalation Rules
+      // Escalation Rules
       const explicitTransferKws = parseCsvKeywords("explicitTransferKeywordsInput");
       const dissatisfactionKws = parseCsvKeywords("dissatisfactionKeywordsInput");
       const systemMandatedKws = parseCsvKeywords("systemMandatedKeywordsInput");
@@ -2007,18 +2548,9 @@
           channel: "Voice AI Call",
           time: `${simTime} GST`
         });
-        feedbacksState.push({
-          feedback_id: "CSAT-" + Math.random().toString(16).substring(2, 6).toUpperCase(),
-          rating: 1,
-          sentiment: "Dissatisfied",
-          comment: utterance
-        });
-        markAgendaStepCompleted("STEP_4_CAPTURE_CSAT");
         renderCRMLists();
-
         executeWarmTransferToRM(customer, "Rule 2: High Dissatisfaction", `Logged Critical Escalation ${cmpId}.`, utterance);
-
-        const reply = `I am truly sorry you've had such a frustrating experience, ${customer.respectful_name}. I've logged an urgent priority ticket under ${cmpId}, and I'm connecting you directly to a Senior Relationship Officer right now to resolve this personally for you.`;
+        const reply = `I am truly sorry you've had such a frustrating experience, ${customer.respectful_name}. I've logged an urgent priority ticket under ${cmpId}, and I'm connecting you directly to a Senior Relationship Officer right now.`;
         appendMessage("ai", reply, `Logged ${cmpId} & Transferred to Senior Officer`);
         speakText(reply, false);
         endActiveCall("Escalated to Senior Relationship Officer");
@@ -2040,9 +2572,7 @@
           time: `${simTime} GST`
         });
         renderCRMLists();
-
         executeWarmTransferToRM(customer, "Rule 3: System Policy", "Regulated action requires Relationship Officer sign-off.", utterance);
-
         const reply = matchedMandatedScenario
           ? matchedMandatedScenario.response_template.replace(/\{respectful_name\}/g, customer.respectful_name)
           : `I understand, ${customer.respectful_name}. Because this request requires formal Relationship Officer sign-off under RAKEZ policy, I've opened reference ${srId} and I'm connecting you straight through to your Relationship Officer now.`;
@@ -2052,56 +2582,32 @@
         return;
       }
 
-      // 3. Natural Step 1 Turn: If Noura just asked "Am I speaking with Mr. Tariq?" and customer says "Yes / Speaking / Hello"
-      const affirmativeWords = ["yes", "yeah", "yep", "sure", "speaking", "confirm", "lock it", "lock that", "go ahead", "apply it", "do it", "sounds good", "please do", "book it", "activate", "okay", "ok", "hi", "hello", "good"];
-      const negativeWords = ["no", "not right now", "maybe later", "hold off", "different one", "other offer", "don't apply", "not interested", "skip", "pass"];
+      const affirmativeWords = ["yes", "yeah", "yep", "sure", "speaking", "confirm", "lock it", "lock that", "go ahead", "apply it", "do it", "sounds good", "please do", "book it", "activate", "okay", "ok", "hi", "hello", "good", "fine"];
+      const negativeWords = ["no", "not right now", "maybe later", "hold off", "different one", "other offer", "don't apply", "not interested", "skip", "pass", "none"];
 
-      if (!conversationState.introCompleted && conversationState.turnCount === 2 && !matchedMandatedScenario) {
+      if (!conversationState.introCompleted && conversationState.turnCount === 2) {
         conversationState.introCompleted = true;
         markAgendaStepCompleted("STEP_1_GREETING_CONSENT");
-
         const jumpedToQuestion = backendScenarios.some(sc => sc.trigger_keywords.some(kw => lower.includes(kw.toLowerCase()))) || matchBriefOfferMention(lower, customer);
         if (!jumpedToQuestion) {
-          const introReply = pickVariedPhrase("step_1_intro", [
-            `Hi ${customer.respectful_name}! This is Noura calling from RAKEZ Client Relations on a recorded line. Hope your week is going well! I'm reaching out because your renewal window is coming up, and you pre-qualify for 15% off our 3-Year License Renewal package as well as 3 months rent-free on Al Hamra warehouse expansion. Which of those sounds more useful for your plans?`,
-            `Wonderful, thank you ${customer.respectful_name}! This is Noura from the RAKEZ Client Relations team calling on a recorded line. I'm checking in because your profile is pre-approved for two renewal benefits—a 15% discount on a 3-Year License Renewal with 2 free visa quotas, and a 3-month rent-free warehouse expansion offer. Do either of those catch your interest today?`
-          ]);
+          const introReply = `Hi ${customer.respectful_name}! This is Noura calling from RAKEZ Client Relations on a recorded line. Hope your week is going well! I'm reaching out because your renewal window is coming up, and you pre-qualify for 15% off our 3-Year License Renewal package as well as 3 months rent-free on Al Hamra warehouse expansion. Which of those sounds more useful for your plans?`;
           markAgendaStepCompleted("STEP_2_PITCH_OFFERS");
           conversationState.offersPresented = true;
+          step3AskedCount = 1;
           conversationState.history.push({ role: "assistant", content: introReply });
-          appendMessage("ai", introReply, "Step 1 & Step 2 Covered: Intro & Pre-Approved Offers Shared");
+          appendMessage("ai", introReply, "Step 1 & Step 2 Covered: Intro & Offers Shared");
           speakText(introReply, true);
           return;
         }
       }
 
-      // 4. Topic Change / Off-Script Question Handler + Smooth Varied Return to Agenda
       const matchedTopicChangeScenario = backendScenarios.find(
         sc => !sc.requires_rm_transfer && sc.trigger_keywords.some(kw => lower.includes(kw.toLowerCase()))
       );
-
-      const ratingMatch = lower.match(/([1-5])\s*(?:\/|out of)\s*5/) || (lower.includes("5 stars") ? [null, "5"] : null);
-      let ratingBadgePart = "";
-      if (ratingMatch) {
-        const ratingNum = parseInt(ratingMatch[1], 10);
-        const fbId = "CSAT-" + Math.random().toString(16).substring(2, 6).toUpperCase();
-        feedbacksState.push({
-          feedback_id: fbId,
-          rating: ratingNum,
-          sentiment: ratingNum >= 4 ? "Positive" : "Neutral",
-          comment: utterance
-        });
-        markAgendaStepCompleted("STEP_4_CAPTURE_CSAT");
-        renderCRMLists();
-        ratingBadgePart = `Step 4 Covered (${ratingNum}/5 CSAT) • `;
-      }
-
       if (matchedTopicChangeScenario) {
         conversationState.introCompleted = true;
         markAgendaStepCompleted("STEP_1_GREETING_CONSENT");
-
         let tId = "N/A";
-        let actionBadge = `${interruptedMidSpeech ? "Barge-In Answered • " : ""}${ratingBadgePart}Resolved (${matchedTopicChangeScenario.name}) -> Steered to Agenda`;
         if (matchedTopicChangeScenario.auto_ticket_type) {
           tId = (matchedTopicChangeScenario.auto_ticket_type === "Complaint" ? "CMP-360-" : "SR-360-") + Math.random().toString(16).substring(2, 6).toUpperCase();
           ticketsState.push({
@@ -2114,46 +2620,20 @@
             time: `${simTime} GST`
           });
           renderCRMLists();
-          actionBadge = `${interruptedMidSpeech ? "Barge-In Answered • " : ""}${ratingBadgePart}Logged ${tId} & Steered to Agenda`;
         }
-
         const scenarioAnswer = matchedTopicChangeScenario.response_template
           .replace(/\{respectful_name\}/g, customer.respectful_name)
           .replace(/\{ticket_id\}/g, tId);
-
-        let bridgeBack = "";
-        if (conversationState.pendingOfferConfirmation) {
-          const pending = conversationState.pendingOfferConfirmation;
-          bridgeBack = pickVariedPhrase("pending_offer_return", [
-            `Whenever you're ready, would you also like me to lock in the ${pending.short_label} on your Portal 360 profile?`,
-            `Coming back to your ${pending.short_label}—shall I go ahead and register that on Portal 360 for you as well?`,
-            `And on that ${pending.short_label} we were looking at, would you like me to confirm it on your profile today?`
-          ]);
-        } else {
-          bridgeBack = buildAgendaReturnBridge(customer);
-        }
-
+        const bridgeBack = buildAgendaReturnBridge(customer);
         const fullReply = `${bargeInPrefix}${scenarioAnswer} ${bridgeBack}`;
         conversationState.history.push({ role: "assistant", content: fullReply });
-        appendMessage("ai", fullReply, actionBadge);
+        appendMessage("ai", fullReply, `Answered Topic Change -> Steered to Agenda`);
         speakText(fullReply, true);
         return;
       }
 
-      // 5. Check Pending Offer Confirmation ("Yes, confirm" / "No")
       if (conversationState.pendingOfferConfirmation) {
         const pendingOffer = conversationState.pendingOfferConfirmation;
-
-        const switchedOffer = matchBriefOfferMention(lower, customer);
-        if (switchedOffer && switchedOffer.offer_id !== pendingOffer.offer_id && !affirmativeWords.some(w => lower.includes(w))) {
-          conversationState.pendingOfferConfirmation = switchedOffer;
-          markAgendaStepCompleted("STEP_2_PITCH_OFFERS");
-          const reply = `${bargeInPrefix}Got it, ${customer.respectful_name}—let's switch over to ${switchedOffer.spoken_pitch} instead. Would you like me to confirm and lock that ${switchedOffer.short_label} into Portal 360 for you?`;
-          appendMessage("ai", reply, `Switched Offer to "${switchedOffer.short_label}"`);
-          speakText(reply, true);
-          return;
-        }
-
         if (affirmativeWords.some(w => lower.includes(w))) {
           const srId = "SR-360-" + Math.random().toString(16).substring(2, 6).toUpperCase();
           ticketsState.push({
@@ -2170,244 +2650,77 @@
           markAgendaStepCompleted("STEP_2_PITCH_OFFERS");
           markAgendaStepCompleted("STEP_3_CONFIRM_SELECTION");
           renderCRMLists();
-
-          const nextBridge = buildAgendaReturnBridge(customer);
-          const confirmPhrase = pickVariedPhrase("offer_locked_in", [
-            `Wonderful, ${customer.respectful_name}! I've just locked in the ${pendingOffer.short_label} on your Portal 360 profile under service request ${srId}.`,
-            `All done, ${customer.respectful_name}! Your ${pendingOffer.short_label} is now registered on Portal 360 under reference ${srId}.`,
-            `Fantastic choice, ${customer.respectful_name}—I've activated the ${pendingOffer.short_label} for you under ticket ${srId}.`
-          ]);
-          const reply = `${confirmPhrase} ${nextBridge}`;
+          const reply = `Wonderful, ${customer.respectful_name}! I've locked in the ${pendingOffer.short_label} on Portal 360 under ${srId}. ${buildAgendaReturnBridge(customer)}`;
           appendMessage("ai", reply, `Step 3 Covered: Confirmed ${srId}`);
           speakText(reply, true);
           return;
         }
-
         if (negativeWords.some(w => lower.includes(w))) {
           conversationState.pendingOfferConfirmation = null;
           markAgendaStepCompleted("STEP_3_CONFIRM_SELECTION");
-          const nextBridge = buildAgendaReturnBridge(customer);
-          const declinePhrase = pickVariedPhrase("offer_declined", [
-            `No problem at all, ${customer.respectful_name}—I'll leave that pre-approved on your Portal 360 profile so you can review it anytime.`,
-            `Completely understood, ${customer.respectful_name}. I'll keep that offer open on your dashboard with no obligation.`,
-            `Sure thing, ${customer.respectful_name}—we'll leave that package unlocked on your profile for whenever the timing is right.`
-          ]);
-          const reply = `${declinePhrase} ${nextBridge}`;
+          const reply = `No problem at all, ${customer.respectful_name}—I'll leave that open on your Portal 360 profile. ${buildAgendaReturnBridge(customer)}`;
           appendMessage("ai", reply, "Step 3 Covered (Offer Left Open)");
           speakText(reply, true);
           return;
         }
       }
 
-      // 6. Fuzzy Brief-Word Offer Matching ("the 3-year one", "warehouse", "15%")
       const matchedOffer = matchBriefOfferMention(lower, customer);
-      if (matchedOffer && !lower.includes("what offer") && !lower.includes("which offer") && !lower.includes("tell me the offers") && !lower.includes("what do you have")) {
+      if (matchedOffer && !lower.includes("what offer") && !lower.includes("which offer")) {
         conversationState.introCompleted = true;
         conversationState.pendingOfferConfirmation = matchedOffer;
         markAgendaStepCompleted("STEP_1_GREETING_CONSENT");
         markAgendaStepCompleted("STEP_2_PITCH_OFFERS");
-
-        const matchPhrase = pickVariedPhrase("brief_offer_match", [
-          `Got it, ${customer.respectful_name}—you're looking at ${matchedOffer.spoken_pitch}. Would you like me to go ahead and lock in the ${matchedOffer.short_label} on Portal 360 for you?`,
-          `Great choice, ${customer.respectful_name}! That's ${matchedOffer.spoken_pitch}. Shall I register the ${matchedOffer.short_label} under your profile right now?`,
-          `Perfect, ${customer.respectful_name}—${matchedOffer.spoken_pitch}. Just say the word and I'll lock in the ${matchedOffer.short_label} for you today.`
-        ]);
-        const reply = `${bargeInPrefix}${matchPhrase}`;
+        const reply = `${bargeInPrefix}Got it, ${customer.respectful_name}—you're looking at ${matchedOffer.spoken_pitch}. Would you like me to lock in the ${matchedOffer.short_label} on Portal 360 for you?`;
         appendMessage("ai", reply, `Matched "${matchedOffer.short_label}" • Asking Confirmation`);
         speakText(reply, true);
         return;
       }
 
-      // 7. Pure CSAT Rating Turn -> Advance to Next Agenda Step
-      if (ratingMatch) {
-        const ratingNum = parseInt(ratingMatch[1], 10);
-        const nextBridge = buildAgendaReturnBridge(customer);
-        const csatAck = pickVariedPhrase("csat_ack", [
-          `Thank you so much for that ${ratingNum} out of 5 rating, ${customer.respectful_name}—I've recorded it on your Portal 360 profile.`,
-          `I really appreciate that ${ratingNum} out of 5 feedback, ${customer.respectful_name}! I've logged it with our Customer Experience team.`,
-          `Thanks for sharing that ${ratingNum} out of 5 score, ${customer.respectful_name}—that's saved on your profile now.`
-        ]);
-        const reply = `${csatAck} ${nextBridge}`;
-        appendMessage("ai", reply, `${ratingBadgePart}Advancing Agenda`);
+      const ratingMatch = lower.match(/([1-5])\s*(?:\/|out of)\s*5/) || (lower.includes("5 stars") ? [null, "5"] : null);
+      if (ratingMatch || (getNextPendingAgendaStep()?.step_id === "STEP_4_CAPTURE_CSAT" && /^[1-5]$/.test(cleanAlpha))) {
+        const ratingNum = ratingMatch ? parseInt(ratingMatch[1], 10) : parseInt(cleanAlpha, 10);
+        const fbId = "CSAT-" + Math.random().toString(16).substring(2, 6).toUpperCase();
+        feedbacksState.push({
+          feedback_id: fbId,
+          rating: ratingNum,
+          sentiment: ratingNum >= 4 ? "Positive" : "Neutral",
+          comment: utterance
+        });
+        markAgendaStepCompleted("STEP_4_CAPTURE_CSAT");
+        renderCRMLists();
+        const reply = `Thank you so much for that ${ratingNum} out of 5 rating, ${customer.respectful_name}! ${buildAgendaReturnBridge(customer)}`;
+        appendMessage("ai", reply, `Step 4 Covered (${ratingNum}/5 CSAT)`);
         speakText(reply, true);
         return;
       }
 
-      // 8. Customer Asks for Offers or Confirms Step 2
-      if (lower.includes("offer") || lower.includes("what do you have") || lower.includes("benefits") || lower.includes("promotion") || lower.includes("discounts") || lower.includes("tell me more") || (!callAgenda[1].completed && affirmativeWords.some(w => lower.includes(w)))) {
-        conversationState.introCompleted = true;
-        conversationState.offersPresented = true;
-        markAgendaStepCompleted("STEP_1_GREETING_CONSENT");
-        markAgendaStepCompleted("STEP_2_PITCH_OFFERS");
-
-        const offerLines = customer.offers.map((o, idx) => `${idx === 0 ? "First, we have" : "And second, there's"} ${o.spoken_pitch}`).join(". ");
-        const reply = `${bargeInPrefix}Gladly, ${customer.respectful_name}! Looking at your Portal 360 profile right now, you pre-qualify for ${customer.offers.length} packages. ${offerLines}. Which of those sounds like a better fit for you?`;
-        appendMessage("ai", reply, `Step 2 Covered: Shared Eligible Offers`);
-        speakText(reply, true);
-        return;
-      }
-
-      // 8B. If Step 2 was already presented and customer says "Yes / Sure / Go ahead" to locking in an offer
-      if (!callAgenda[2].completed && affirmativeWords.some(w => lower === w || lower.startsWith(w + " "))) {
-        const defaultOffer = customer.offers[0];
-        conversationState.pendingOfferConfirmation = defaultOffer;
-        const reply = pickVariedPhrase("clarify_which_package", [
-          `Great, ${customer.respectful_name}! Just so I lock in the exact one you prefer—would you like the ${customer.offers.map(o => o.short_label).join(", or the ")}?`,
-          `Awesome, ${customer.respectful_name}! Which one should I activate on your profile first—the ${customer.offers[0]?.short_label} or the ${customer.offers[1]?.short_label || "second package"}?`
-        ]);
-        appendMessage("ai", reply, "Clarifying Which Package to Lock In");
-        speakText(reply, true);
-        return;
-      }
-
-      // 8C. If Step 2 was already presented and customer says "No / Not right now" to locking in an offer
-      if (!callAgenda[2].completed && negativeWords.some(w => lower === w || lower.startsWith(w + " "))) {
-        markAgendaStepCompleted("STEP_3_CONFIRM_SELECTION");
-        const nextBridge = buildAgendaReturnBridge(customer);
-        const reply = `No problem at all, ${customer.respectful_name}—I'll leave those pre-approved offers open on your Portal 360 profile for whenever you're ready. ${nextBridge}`;
-        appendMessage("ai", reply, "Step 3 Covered (Offers Left Open on Profile)");
-        speakText(reply, true);
-        return;
-      }
-
-      // 9. Call Closing ("Nothing else", "No thanks, all good", "Thank you bye")
-      if (lower.includes("nothing else") || lower.includes("that's all") || lower.includes("all good") || lower.includes("no thank") || lower.includes("bye")) {
-        const uncoveredCritical = callAgenda.find(s => !s.completed && s.step_id !== "STEP_5_CHECK_ISSUES_CLOSE");
-        if (uncoveredCritical && !lower.includes("bye")) {
-          const bridgePrompt = buildAgendaReturnBridge(customer);
-          const reply = `Understood, ${customer.respectful_name}. Just before we wrap up—${bridgePrompt.charAt(0).toLowerCase() + bridgePrompt.slice(1)}`;
-          appendMessage("ai", reply, `Agenda Guard: Covering ${uncoveredCritical.title}`);
-          speakText(reply, true);
-          return;
-        }
-
+      if (lower.includes("nothing else") || lower.includes("that's all") || lower.includes("all good") || lower.includes("no thank") || lower.includes("bye") || lower.includes("goodbye")) {
         markAgendaStepCompleted("STEP_5_CHECK_ISSUES_CLOSE");
-        const closeReply = pickVariedPhrase("call_closing", [
-          `It was an absolute pleasure speaking with you today, ${customer.respectful_name}! Everything is updated on your Portal 360 profile and I've sent the confirmation summary to ${customer.email}. Have a wonderful rest of your day!`,
-          `Thank you so much for your time today, ${customer.respectful_name}! I've emailed your full Portal 360 summary to ${customer.email}. Wishing you a great day ahead!`
-        ]);
-        appendMessage("ai", closeReply, "Step 5 Covered: All Call Agenda Objectives Completed!");
+        const closeReply = `It was an absolute pleasure speaking with you today, ${customer.respectful_name}! Everything is updated on your Portal 360 profile and I've sent the confirmation summary to ${customer.email}. Have a wonderful rest of your day!`;
+        appendMessage("ai", closeReply, "Step 5 Covered: Call Completed");
         speakText(closeReply, false);
         endActiveCall("Call Completed");
         return;
       }
 
-      // 10. Optional Live Gemini 2.5 Flash Agenda-Aware Improvisation
-      const geminiKey = (document.getElementById("geminiKeyInput")?.value || "").trim();
-      if (geminiKey.startsWith("AIza")) {
-        try {
-          const nextStep = getNextPendingAgendaStep();
-          const sysPrompt = `You are Noura, a warm, human-like Senior Client Relations Executive calling from Rakez (Ras Al Khaimah Economic Zone) in the UAE.
-Always address the customer respectfully as "${customer.respectful_name}".
-${interruptedMidSpeech ? "IMPORTANT: The customer just interrupted you while you were speaking. Acknowledge their interruption naturally and directly answer or address what they said." : ""}
-Customer's eligible offers:
-${customer.offers.map(o => `- ID: ${o.offer_id} | ${o.short_label} (${o.discount}): ${o.description}`).join("\n")}
-Uncovered Call Agenda Steps remaining:
-${callAgenda.filter(s => !s.completed).map(s => `- ${s.title}: "${s.question_to_ask}"`).join("\n")}
-Rules:
-1. Directly, naturally, and specifically respond to what ${customer.respectful_name} just said ("${utterance}").
-2. Vary your phrasing naturally like a real human specialist—never use repetitive canned phrases like "I hear you".
-3. Smoothly weave in the next uncovered Call Agenda goal if appropriate: "${nextStep ? nextStep.question_to_ask.replace(/\{respectful_name\}/g, customer.respectful_name) : "Check if they need anything else"}".
-4. Keep your total spoken reply to 2 natural, conversational sentences.`;
-
-          const geminiContents = conversationState.history.slice(-6).map(m => ({
-            role: m.role === "assistant" ? "model" : "user",
-            parts: [{ text: m.content }]
-          }));
-
-          const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(geminiKey)}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              systemInstruction: { parts: [{ text: sysPrompt }] },
-              contents: geminiContents,
-              generationConfig: { temperature: 0.7, maxOutputTokens: 160 }
-            })
-          });
-          if (resp.ok) {
-            const data = await resp.json();
-            const llmReply = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-            if (llmReply) {
-              checkCustomAgendaKeywords(llmReply.toLowerCase());
-              conversationState.history.push({ role: "assistant", content: llmReply });
-              appendMessage("ai", llmReply, interruptedMidSpeech ? "Barge-In Handled • Gemini 2.5 Natural Response" : "Gemini 2.5 Flash + Agenda Steering");
-              speakText(llmReply, true);
-              return;
-            }
-          }
-        } catch (err) {}
-      }
-
-      // 11. Built-In Human Specialist NLU & Varied Response Generator (Zero "I hear you" repetition!)
       conversationState.introCompleted = true;
       markAgendaStepCompleted("STEP_1_GREETING_CONSENT");
-
-      const isQuestion = /\b(what|how|when|where|why|who|can|could|do|does|is|are|will|would|which)\b/i.test(lower) || utterance.includes("?");
-      const isNeedOrRequest = /\b(need|want|help|support|issue|problem|change|update|add|modify|amend|renew|apply|request|looking for)\b/i.test(lower);
-      const isHesitationOrThinking = /\b(not sure|think about|let me think|maybe|later|check with|partner|accountant|discuss|decide| email me|send me)\b/i.test(lower);
-
-      let contextualAck = "";
-      let badgeText = interruptedMidSpeech ? "Barge-In Handled • Dynamic Human Response" : "Dynamic Human Response • Agenda Steering";
-
-      if (isHesitationOrThinking) {
-        // Customer wants time to think or wants info by email -> mark Step 3 covered so we don't keep nagging them!
+      if (getNextPendingAgendaStep()?.step_id === "STEP_3_CONFIRM_SELECTION" && step3AskedCount >= 1) {
         markAgendaStepCompleted("STEP_3_CONFIRM_SELECTION");
-        contextualAck = pickVariedPhrase("hesitation_ack", [
-          `${bargeInPrefix}That makes total sense, ${customer.respectful_name}—there's zero rush to decide on the spot. I've flagged both pre-approved packages on your Portal 360 dashboard and I'll email the full breakdown to ${customer.email} so you can review them at your convenience.`,
-          `${bargeInPrefix}Of course, ${customer.respectful_name}, take all the time you need to review the numbers. I'll send the official comparison sheet straight to ${customer.email} and keep your 15% discount pre-approval active on Portal 360.`,
-          `${bargeInPrefix}Completely fair, ${customer.respectful_name}—it's always best to review the details first. I've saved the pre-approved rates on your Portal 360 profile and queued the summary email for ${customer.email}.`
-        ]);
-        badgeText = "Saved Offers for Review & Queued Email -> Advancing Agenda";
-      } else if (isNeedOrRequest) {
-        const srId = "SR-360-" + Math.random().toString(16).substring(2, 6).toUpperCase();
-        ticketsState.push({
-          ticket_id: srId,
-          customer_id: customer.customer_id,
-          type: "Service Request",
-          priority: "Normal",
-          summary: `Client Request: ${utterance.slice(0, 48)}`,
-          channel: "Voice AI Call",
-          time: `${simTime} GST`
-        });
-        renderCRMLists();
-        contextualAck = pickVariedPhrase("custom_request_ack", [
-          `${bargeInPrefix}I can certainly take care of that for you, ${customer.respectful_name}. I've just logged a dedicated service request (${srId}) on your Portal 360 profile for "${utterance}" so our specialist team actions it today.`,
-          `${bargeInPrefix}Consider it done, ${customer.respectful_name}—I've registered "${utterance}" under Portal 360 reference ${srId} and routed it straight to our operations team.`,
-          `${bargeInPrefix}Happy to sort that out right now, ${customer.respectful_name}. I've opened ticket ${srId} on your account covering "${utterance}" and you'll see the live tracker in Portal 360.`,
-          `${bargeInPrefix}Let's get that moving for you immediately, ${customer.respectful_name}. I've created service request ${srId} for "${utterance}" so our team follows up with the exact details today.`
-        ]);
-        badgeText = `${interruptedMidSpeech ? "Barge-In Handled • " : ""}Logged ${srId} for Custom Request`;
-      } else if (isQuestion) {
-        const srId = "SR-360-" + Math.random().toString(16).substring(2, 6).toUpperCase();
-        ticketsState.push({
-          ticket_id: srId,
-          customer_id: customer.customer_id,
-          type: "Inquiry",
-          priority: "Normal",
-          summary: `Client Inquiry: ${utterance.slice(0, 48)}`,
-          channel: "Voice AI Call",
-          time: `${simTime} GST`
-        });
-        renderCRMLists();
-        contextualAck = pickVariedPhrase("custom_question_ack", [
-          `${bargeInPrefix}Great question, ${customer.respectful_name}. For "${utterance}", everything can be completed directly through your Portal 360 dashboard without visiting a service center, and I've attached the exact step-by-step guide under reference ${srId} to your email.`,
-          `${bargeInPrefix}Glad you asked, ${customer.respectful_name}! Regarding "${utterance}", our Client Relations desk handles that digitally on Portal 360—I've logged inquiry ${srId} so the exact fee and requirement sheet is included in your post-call email.`,
-          `${bargeInPrefix}To answer your question on "${utterance}", ${customer.respectful_name}—we process that online via Portal 360 with fast-track turnaround, and I've linked the full details to reference ${srId} for you.`
-        ]);
-        badgeText = `${interruptedMidSpeech ? "Barge-In Question Answered • " : ""}Logged Inquiry ${srId}`;
-      } else {
-        contextualAck = pickVariedPhrase("general_conversational_ack", [
-          `${bargeInPrefix}I appreciate you sharing that, ${customer.respectful_name}—I've added a note on your Portal 360 profile regarding "${utterance}".`,
-          `${bargeInPrefix}Thanks for letting me know, ${customer.respectful_name}; I've updated your account notes with "${utterance}".`,
-          `${bargeInPrefix}Noted on your profile, ${customer.respectful_name}—we'll make sure "${utterance}" is factored into your renewal plan.`,
-          `${bargeInPrefix}Got that down on your file, ${customer.respectful_name}, thank you for the context.`
-        ]);
       }
-
+      const contextualAck = pickVariedPhrase("natural_clean_ack", [
+        `${bargeInPrefix}Got it, ${customer.respectful_name}, thank you for sharing that.`,
+        `${bargeInPrefix}Understood, ${customer.respectful_name}—I've made a note of that on your profile.`,
+        `${bargeInPrefix}That makes complete sense, ${customer.respectful_name}.`
+      ]);
       const bridgeQuestion = buildAgendaReturnBridge(customer);
+      if (getNextPendingAgendaStep()?.step_id === "STEP_3_CONFIRM_SELECTION") {
+        step3AskedCount++;
+      }
       const improvisedReply = `${contextualAck} ${bridgeQuestion}`;
       conversationState.history.push({ role: "assistant", content: improvisedReply });
-      appendMessage("ai", improvisedReply, badgeText);
+      appendMessage("ai", improvisedReply, "Offline Fallback (Connect Gemini Key in Card 2 for Live AI)");
       speakText(improvisedReply, true);
     }
 
@@ -2647,12 +2960,49 @@ Rules:
       showToast(`Opened Gmail Compose from ${rakezBox} to ${clientEmail}!`);
     });
 
+    document.getElementById("connectGeminiBtn")?.addEventListener("click", verifyAndConnectGeminiKey);
+    document.getElementById("geminiKeyInputMain")?.addEventListener("input", (e) => {
+      syncGeminiKeyUI(e.target.value.trim());
+    });
+    document.getElementById("geminiKeyInput")?.addEventListener("input", (e) => {
+      syncGeminiKeyUI(e.target.value.trim());
+    });
+    document.getElementById("geminiModelSelect")?.addEventListener("change", () => {
+      const mode = document.getElementById("geminiModelSelect")?.value || "dynamic_router";
+      const key = getStoredGeminiKey();
+      if (key) {
+        discoverActiveModelTiers(key).then(tiers => {
+          syncGeminiKeyUI(key, tiers);
+          if (mode === "force_basic") {
+            updateTurnModelTelemetry("Locked Basic", tiers.basic, "Manual Override");
+          } else if (mode === "force_advanced") {
+            updateTurnModelTelemetry("Locked Advanced", tiers.advanced, "Manual Override");
+          } else {
+            updateTurnModelTelemetry("Smart Router", `${tiers.basic} ↔ ${tiers.advanced}`, "Auto-Switch");
+          }
+        });
+      }
+    });
+
     window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("agendaConfigEditor").value = JSON.stringify(callAgenda, null, 2);
       document.getElementById("scenariosConfigEditor").value = JSON.stringify(backendScenarios, null, 2);
       populateVoiceSelector();
       if ("speechSynthesis" in window) {
         window.speechSynthesis.onvoiceschanged = populateVoiceSelector;
+      }
+      const savedKey = (localStorage.getItem("rakez_gemini_api_key") || "").trim();
+      if (savedKey) {
+        syncGeminiKeyUI(savedKey);
+        discoverActiveModelTiers(savedKey).then(tiers => {
+          syncGeminiKeyUI(savedKey, tiers);
+          const mode = document.getElementById("geminiModelSelect")?.value || "force_basic";
+          updateTurnModelTelemetry(
+            mode === "force_basic" ? "Basic Mode" : "Smart Router",
+            mode === "force_basic" ? tiers.basic : `${tiers.basic} ↔ ${tiers.advanced}`,
+            "Ready"
+          );
+        });
       }
       syncPresetToEditableFields();
     });
