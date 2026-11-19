@@ -551,6 +551,119 @@ class OutlookGraphEmailAdapter(BaseEmailAdapter):
         return {"message_id": msg_id, "status": "SENT"}
 
 
+
+# ============================================================================
+# 3B. CONTEXT-AWARE DYNAMIC MODEL ROUTER (Basic <-> Advanced Tier Switching)
+# ============================================================================
+
+class ModelTier(str, enum.Enum):
+    LOCAL_INSTANT = "tier_0_local_instant"       # ~0ms, $0 cost: DNC, hold/wait, repeat, simple acks
+    BASIC_FAST = "tier_1_basic_fast"             # ~300ms: Simple greetings, single-intent FAQs, offer pitch
+    ADVANCED_REASONING = "tier_2_advanced_model" # ~800ms: Multi-part queries, negotiations, escalations
+
+
+@dataclasses.dataclass
+class ModelRoutingDecision:
+    tier: ModelTier
+    model_name: str
+    reason: str
+    temperature: float
+    max_tokens: int
+
+
+class ContextAwareModelRouter:
+    """
+    Dynamically routes each conversational turn to the optimal Gemini model tier
+    based on utterance complexity, interruption state, sentiment/risk, and turn depth:
+      - Tier 0 (Local Instant): Deterministic control & compliance (<5ms)
+      - Tier 1 (Basic Model): Routine single-intent questions & confirmations
+      - Tier 2 (Advanced Model): Multi-part questions, negotiations, barge-in pivots,
+        or high-stakes escalation/regulatory turns.
+    """
+
+    def __init__(
+        self,
+        basic_model: str = "gemini-3.5-flash-lite",
+        advanced_model: str = "gemini-3.8-flash",
+        basic_only: bool = True,
+    ) -> None:
+        self.basic_model = basic_model
+        self.advanced_model = advanced_model
+        self.basic_only = basic_only
+
+    def select_model(
+        self,
+        utterance: str,
+        session: InteractionSession,
+        interrupted_mid_speech: bool = False,
+    ) -> ModelRoutingDecision:
+        lower = utterance.lower().strip()
+        words = lower.split()
+
+        # Tier 0: Immediate deterministic call control / regulatory opt-out
+        if any(k in lower for k in ["stop calling", "do not call", "dnc", "hold on", "wait a minute", "can you repeat"]):
+            return ModelRoutingDecision(
+                tier=ModelTier.LOCAL_INSTANT,
+                model_name="local-deterministic-guard",
+                reason="Deterministic Call Control / Compliance Turn",
+                temperature=0.0,
+                max_tokens=120,
+            )
+
+        if self.basic_only:
+            return ModelRoutingDecision(
+                tier=ModelTier.BASIC_FAST,
+                model_name=self.basic_model,
+                reason="Basic Model Only Mode (Low-Latency Flash-Lite)",
+                temperature=0.65,
+                max_tokens=220,
+            )
+
+        # Tier 2 Signals: High-stakes sentiment, legal policy, multi-part negotiation, or substantive interruption
+        high_stakes_terms = [
+            "frustrated", "fed up", "unacceptable", "liquidat", "deregister",
+            "cancel license", "dispute", "freeze", "court", "legal", "relationship officer",
+            "manager", "visa", "delayed", "icp"
+        ]
+        complex_reasoning_terms = [
+            "compare", "difference", "combine", "installment", "monthly", "payment plan",
+            "negotiate", "quota", "shareholder", "corporate tax", "vat", "calculate", "what if"
+        ]
+
+        if any(t in lower for t in high_stakes_terms):
+            return ModelRoutingDecision(
+                tier=ModelTier.ADVANCED_REASONING,
+                model_name=self.advanced_model,
+                reason="High-Stakes Policy / Sentiment / Escalation Context",
+                temperature=0.5,
+                max_tokens=320,
+            )
+
+        if (
+            any(t in lower for t in complex_reasoning_terms)
+            or utterance.count("?") >= 2
+            or (interrupted_mid_speech and len(words) >= 4)
+            or len(words) >= 16
+            or (len(session.transcript_history) >= 6 and len(words) >= 6)
+        ):
+            return ModelRoutingDecision(
+                tier=ModelTier.ADVANCED_REASONING,
+                model_name=self.advanced_model,
+                reason="Multi-Part Commercial Reasoning / Deep Context",
+                temperature=0.55,
+                max_tokens=320,
+            )
+
+        # Tier 1: Basic fast low-latency model for standard routine turns
+        return ModelRoutingDecision(
+            tier=ModelTier.BASIC_FAST,
+            model_name=self.basic_model,
+            reason="Routine Single-Intent Turn",
+            temperature=0.65,
+            max_tokens=200,
+        )
+
+
 # ============================================================================
 # 4. AUTONOMOUS AI CALLER ORCHESTRATOR (Fuzzy Offer Match & Strict RM Policy)
 # ============================================================================
@@ -575,6 +688,7 @@ class OmnichannelAgentOrchestrator:
         self.telephony = telephony_adapter
         self.email = email_adapter
         self.compliance = compliance_guard
+        self.model_router = ContextAwareModelRouter()
 
     def build_system_prompt(self, session: InteractionSession) -> str:
         return (
@@ -626,6 +740,14 @@ class OmnichannelAgentOrchestrator:
         Processes a live customer turn with brief-phrase offer matching, confirmation memory,
         modifiable scenario resolution, and strict 3-rule Relationship Officer transfer gating.
         """
+        route = self.model_router.select_model(utterance, session)
+        logger.info(
+            "Dynamic Model Routing -> tier=%s model=%s reason='%s'",
+            route.tier.value,
+            route.model_name,
+            route.reason,
+        )
+        session.transcript_history.append({"role": "user", "content": utterance, "routed_model": route.model_name})
         lower = utterance.lower()
         first_name = session.customer.first_name
         offers = await self.crm.get_eligible_offers(session.customer.customer_id)
