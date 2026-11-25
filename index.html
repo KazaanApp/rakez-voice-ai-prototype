@@ -1464,6 +1464,7 @@
 
     function stopAllAudioPlayback(triggeredByBargeIn = false) {
       ttsPlaybackToken++; // Invalidates any queued speech clauses immediately!
+      resolvePendingSpeechPromise();
       if (triggeredByBargeIn && isAISpeaking) {
         conversationState.wasInterrupted = true;
       }
@@ -1571,45 +1572,65 @@
      * sequentially. Because each utterance is short (~1.5s), calling speechSynthesis.cancel()
      * on Windows/Mac Chrome stops Noura almost instantaneously (<80ms) when interrupted!
      */
-    async function speakText(rawText, openMicAfter = true, isSubstantive = true) {
+    let activeSpeechResolve = null;
+    let isClosingOrTransferring = false;
+
+    function resolvePendingSpeechPromise() {
+      if (activeSpeechResolve) {
+        const fn = activeSpeechResolve;
+        activeSpeechResolve = null;
+        fn();
+      }
+    }
+
+    function speakText(rawText, openMicAfter = true, isSubstantive = true) {
       stopAllAudioPlayback(false);
       const myToken = ++ttsPlaybackToken;
 
-      isAISpeaking = true;
-      speechStartedAt = Date.now();
-      const spokenText = formatForHumanSpeech(rawText);
-      currentAISpokenTextLower = spokenText.toLowerCase();
-      if (isSubstantive) {
-        lastSubstantiveAIReply = rawText;
-      }
+      return new Promise(async (resolve) => {
+        activeSpeechResolve = resolve;
 
-      const waveBox = document.getElementById("waveformBox");
-      waveBox.classList.remove("hidden");
-      waveBox.classList.add("flex");
-      updateTurnBannerUI("ai_speaking");
-
-      if (isMobileDevice) {
-        stopResponseRecordingWindow();
-      } else if (callActive && !activeRecognition) {
-        startResponseRecordingWindow();
-      }
-
-      const onSpeechFinished = () => {
-        if (myToken !== ttsPlaybackToken) return; // Interrupted or superseded
-        isAISpeaking = false;
-        waveBox.classList.add("hidden");
-        waveBox.classList.remove("flex");
-        if (callActive && openMicAfter) {
-          if (customerOnHoldWait) {
-            updateTurnBannerUI("on_hold_wait");
-          } else {
-            updateTurnBannerUI("listening_response");
-          }
-          if (!activeRecognition) {
-            setTimeout(() => startResponseRecordingWindow(), isMobileDevice ? 120 : 40);
-          }
+        isAISpeaking = true;
+        speechStartedAt = Date.now();
+        const spokenText = formatForHumanSpeech(rawText);
+        currentAISpokenTextLower = spokenText.toLowerCase();
+        if (isSubstantive) {
+          lastSubstantiveAIReply = rawText;
         }
-      };
+
+        const waveBox = document.getElementById("waveformBox");
+        waveBox.classList.remove("hidden");
+        waveBox.classList.add("flex");
+        if (!isClosingOrTransferring) {
+          updateTurnBannerUI("ai_speaking");
+        }
+
+        if (isMobileDevice || isClosingOrTransferring) {
+          stopResponseRecordingWindow();
+        } else if (callActive && !activeRecognition) {
+          startResponseRecordingWindow();
+        }
+
+        const onSpeechFinished = () => {
+          if (myToken !== ttsPlaybackToken) {
+            resolvePendingSpeechPromise();
+            return;
+          }
+          isAISpeaking = false;
+          waveBox.classList.add("hidden");
+          waveBox.classList.remove("flex");
+          if (callActive && openMicAfter && !isClosingOrTransferring) {
+            if (customerOnHoldWait) {
+              updateTurnBannerUI("on_hold_wait");
+            } else {
+              updateTurnBannerUI("listening_response");
+            }
+            if (!activeRecognition) {
+              setTimeout(() => startResponseRecordingWindow(), isMobileDevice ? 120 : 40);
+            }
+          }
+          resolvePendingSpeechPromise();
+        };
 
       // 1. Optional ElevenLabs Flash v2.5 Ultra-Human Voice
       const elevenKey = (document.getElementById("elevenLabsKeyInput")?.value || "").trim();
@@ -1702,6 +1723,26 @@
         setTimeout(() => speakNextClause(), 35);
       } catch (e) {
         onSpeechFinished();
+      }
+      });
+    }
+
+    /**
+     * Speaks Noura's final transfer/closing/DNC message completely aloud BEFORE ending
+     * or transferring the call, so speechSynthesis.cancel() never cuts her off!
+     */
+    async function speakAndEndCall(replyText, endReasonText, inProgressBannerText = null) {
+      isClosingOrTransferring = true;
+      stopResponseRecordingWindow();
+      updateTurnBannerUI(
+        "ai_speaking",
+        inProgressBannerText || `🔊 Noura is speaking before ${endReasonText.toLowerCase()}...`
+      );
+      await speakText(replyText, false, true);
+      await new Promise(r => setTimeout(r, 320));
+      isClosingOrTransferring = false;
+      if (callActive) {
+        endActiveCall(endReasonText);
       }
     }
 
@@ -2079,6 +2120,7 @@
     }
 
     function endActiveCall(reasonText = "Call Ended") {
+      isClosingOrTransferring = false;
       callActive = false;
       stopResponseRecordingWindow();
       stopAllAudioPlayback(false);
@@ -2578,8 +2620,7 @@ Return ONLY a valid JSON object matching this exact schema:
         updateTurnModelTelemetry("Tier 0 (Instant)", "local-compliance", "TDRA DNC Opt-Out");
         const reply = `I completely understand, ${customer.respectful_name}—sorry to catch you at an inconvenient time. I've added your number to our Do Not Call list per UAE regulations, so you won't receive any further outreach calls from us. Wishing you a great day!`;
         appendMessage("ai", reply, "🚀 Tier 0 Instant (<5ms) • TDRA Do-Not-Call Opt-Out Recorded");
-        speakText(reply, false);
-        endActiveCall("Customer Opted Out (DNC)");
+        await speakAndEndCall(reply, "Customer Opted Out (DNC)", "🔊 Noura is confirming your Do-Not-Call request...");
         return;
       }
 
@@ -2705,15 +2746,13 @@ Return ONLY a valid JSON object matching this exact schema:
           executeWarmTransferToRM(customer, ruleLabel, g.ticket_summary || utterance, utterance);
           conversationState.history.push({ role: "assistant", content: g.spoken_reply });
           appendMessage("ai", g.spoken_reply, `${tierBadgePrefix} • Transferred to RM`);
-          speakText(g.spoken_reply, false);
-          endActiveCall("Transferred to Relationship Officer");
+          await speakAndEndCall(g.spoken_reply, "Transferred to Relationship Officer", "🔄 Noura is connecting you to your Relationship Officer...");
           return;
         } else if (g.action === "end_call") {
           markAgendaStepCompleted("STEP_5_CHECK_ISSUES_CLOSE");
           conversationState.history.push({ role: "assistant", content: g.spoken_reply });
           appendMessage("ai", g.spoken_reply, `${tierBadgePrefix} • Call Completed`);
-          speakText(g.spoken_reply, false);
-          endActiveCall("Call Completed");
+          await speakAndEndCall(g.spoken_reply, "Call Completed", "🔊 Noura is wrapping up the call...");
           return;
         }
 
@@ -2804,12 +2843,11 @@ Return ONLY a valid JSON object matching this exact schema:
       const dissatisfactionKws = parseCsvKeywords("dissatisfactionKeywordsInput");
       const systemMandatedKws = parseCsvKeywords("systemMandatedKeywordsInput");
 
-      if (explicitTransferKws.some(kw => lower.includes(kw))) {
+      if (explicitTransferKws.some(kw => lower.includes(kw)) || /\b(transfer|connect|speak|talk)\b.*\b(person|human|agent|officer|manager|someone|representative)\b/i.test(lower)) {
         executeWarmTransferToRM(customer, "Rule 1: Customer Request", "Customer explicitly requested a human Officer.", utterance);
         const reply = `Of course, ${customer.respectful_name}. Let me connect you straight through to your dedicated RAKEZ Relationship Officer right now with our conversation notes attached.`;
         appendMessage("ai", reply, "Transferred to Relationship Officer");
-        speakText(reply, false);
-        endActiveCall("Transferred to Relationship Officer");
+        await speakAndEndCall(reply, "Transferred to Relationship Officer", "🔄 Noura is connecting you to your Relationship Officer...");
         return;
       }
 
@@ -2828,8 +2866,7 @@ Return ONLY a valid JSON object matching this exact schema:
         executeWarmTransferToRM(customer, "Rule 2: High Dissatisfaction", `Logged Critical Escalation ${cmpId}.`, utterance);
         const reply = `I am truly sorry you've had such a frustrating experience, ${customer.respectful_name}. I've logged an urgent priority ticket under ${cmpId}, and I'm connecting you directly to a Senior Relationship Officer right now.`;
         appendMessage("ai", reply, `Logged ${cmpId} & Transferred to Senior Officer`);
-        speakText(reply, false);
-        endActiveCall("Escalated to Senior Relationship Officer");
+        await speakAndEndCall(reply, "Escalated to Senior Relationship Officer", "🔄 Noura is escalating you to a Senior Relationship Officer...");
         return;
       }
 
@@ -2853,8 +2890,7 @@ Return ONLY a valid JSON object matching this exact schema:
           ? matchedMandatedScenario.response_template.replace(/\{respectful_name\}/g, customer.respectful_name)
           : `I understand, ${customer.respectful_name}. Because this request requires formal Relationship Officer sign-off under RAKEZ policy, I've opened reference ${srId} and I'm connecting you straight through to your Relationship Officer now.`;
         appendMessage("ai", reply, `System-Mandated Officer Handover (${srId})`);
-        speakText(reply, false);
-        endActiveCall("Transferred (System-Mandated Policy)");
+        await speakAndEndCall(reply, "Transferred (System-Mandated Policy)", "🔄 Noura is connecting you to your Relationship Officer...");
         return;
       }
 
@@ -3002,8 +3038,7 @@ Return ONLY a valid JSON object matching this exact schema:
         markAgendaStepCompleted("STEP_5_CHECK_ISSUES_CLOSE");
         const closeReply = `It was an absolute pleasure speaking with you today, ${customer.respectful_name}! Everything is updated on your Portal 360 profile and I've sent the confirmation summary to ${customer.email}. Have a wonderful rest of your day!`;
         appendMessage("ai", closeReply, "Step 5 Covered: Call Completed");
-        speakText(closeReply, false);
-        endActiveCall("Call Completed");
+        await speakAndEndCall(closeReply, "Call Completed", "🔊 Noura is wrapping up the call...");
         return;
       }
 
