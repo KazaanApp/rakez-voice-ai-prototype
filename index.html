@@ -253,6 +253,29 @@
                 <option value="en-GB">British English (en-GB) + RAKEZ Phonetic Booster</option>
               </select>
             </div>
+
+            <!-- Main-Speaker Noise Gate & Environment Isolation Control -->
+            <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+              <div class="flex items-center justify-between">
+                <label for="noiseGateModeSelect" class="text-slate-700 font-bold text-[11px]">
+                  🎙️ Background Noise Isolation
+                </label>
+                <span id="ambientFloorBadge" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-200 text-slate-700">
+                  Gate: Normal
+                </span>
+              </div>
+              <select id="noiseGateModeSelect" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-slate-900 font-medium text-[11px] focus:outline-none focus:border-teal-600">
+                <option value="noisy_strict" selected>🛡️ Strict Main-Speaker Focus (Ignores Background Voices/AC)</option>
+                <option value="normal_office">☕ Balanced Office Filter (Standard Room Noise Gate)</option>
+                <option value="quiet_headset">🎧 Quiet Room / Close Headset (High Mic Sensitivity)</option>
+              </select>
+              <div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                <div id="micLevelMeterFill" class="h-full bg-emerald-500 transition-all duration-75" style="width: 0%"></div>
+              </div>
+              <p class="text-[10px] text-slate-500 leading-snug">
+                Calibrates to room noise floor, filters out non-speech frequencies, and ignores distant/low-confidence background speech.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -1045,6 +1068,43 @@
       }
     }
 
+    // Noise Isolation & Main-Speaker Proximity State
+    let ambientNoiseFloorRms = 0.015;
+    let isMainSpeakerNearMic = false;
+    let lastMainSpeakerVoiceAt = 0;
+
+    const NOISE_GATE_PROFILES = {
+      noisy_strict: {
+        baseRms: 0.088,
+        ambientMultiplier: 3.4,
+        requiredFrames: 7,         // ~115ms of sustained close speech to interrupt
+        minVoiceBandRatio: 0.56,   // Human speech frequencies (250Hz-3200Hz) must dominate
+        minSttConfidence: 0.74,    // Rejects distant/muffled background voices
+        minBargeInWords: 2         // Require >=2 words or explicit command to interrupt via STT
+      },
+      normal_office: {
+        baseRms: 0.058,
+        ambientMultiplier: 2.7,
+        requiredFrames: 5,         // ~85ms of sustained close speech
+        minVoiceBandRatio: 0.48,
+        minSttConfidence: 0.62,
+        minBargeInWords: 2
+      },
+      quiet_headset: {
+        baseRms: 0.032,
+        ambientMultiplier: 2.1,
+        requiredFrames: 3,         // ~50ms fast trigger for quiet room / headset
+        minVoiceBandRatio: 0.38,
+        minSttConfidence: 0.45,
+        minBargeInWords: 1
+      }
+    };
+
+    function getActiveNoiseProfile() {
+      const mode = document.getElementById("noiseGateModeSelect")?.value || "noisy_strict";
+      return NOISE_GATE_PROFILES[mode] || NOISE_GATE_PROFILES.noisy_strict;
+    }
+
     async function initEchoCancelledMicStream() {
       if ("speechSynthesis" in window) {
         try {
@@ -1065,7 +1125,8 @@
           audio: {
             echoCancellation: true,
             noiseSuppression: true,
-            autoGainControl: true
+            autoGainControl: true,
+            channelCount: 1
           }
         });
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -1075,24 +1136,91 @@
           try { await audioCtx.resume(); } catch (e) {}
         }
         const source = audioCtx.createMediaStreamSource(micStream);
+
+        // Bandpass filter (250Hz - 3200Hz) isolates human vocal formants and strips AC rumble & high clicks
+        const highPass = audioCtx.createBiquadFilter();
+        highPass.type = "highpass";
+        highPass.frequency.value = 240;
+
+        const lowPass = audioCtx.createBiquadFilter();
+        lowPass.type = "lowpass";
+        lowPass.frequency.value = 3400;
+
         const analyser = audioCtx.createAnalyser();
         analyser.fftSize = 512;
-        source.connect(analyser);
+        source.connect(highPass);
+        highPass.connect(lowPass);
+        lowPass.connect(analyser);
+
         const timeData = new Float32Array(analyser.fftSize);
+        const freqData = new Uint8Array(analyser.frequencyBinCount);
+        const sampleRate = audioCtx.sampleRate || 48000;
+        const binHz = sampleRate / analyser.fftSize;
 
         let consecutiveVoiceFrames = 0;
+        let uiFrameCounter = 0;
+
         const checkBargeIn = () => {
           if (!callActive) return;
-          if (isAISpeaking) {
-            analyser.getFloatTimeDomainData(timeData);
-            let sumSquares = 0;
-            for (let i = 0; i < timeData.length; i++) {
-              sumSquares += timeData[i] * timeData[i];
+
+          analyser.getFloatTimeDomainData(timeData);
+          let sumSquares = 0;
+          for (let i = 0; i < timeData.length; i++) {
+            sumSquares += timeData[i] * timeData[i];
+          }
+          const rms = Math.sqrt(sumSquares / timeData.length);
+
+          // Spectral voice-band concentration check (250Hz - 3200Hz vs full spectrum)
+          analyser.getByteFrequencyData(freqData);
+          let voiceBandEnergy = 0;
+          let totalEnergy = 0;
+          for (let b = 1; b < freqData.length; b++) {
+            const hz = b * binHz;
+            const val = freqData[b];
+            totalEnergy += val;
+            if (hz >= 250 && hz <= 3200) {
+              voiceBandEnergy += val;
             }
-            const rms = Math.sqrt(sumSquares / timeData.length);
-            if (rms > 0.024 && (Date.now() - speechStartedAt > 260)) {
+          }
+          const voiceBandRatio = totalEnergy > 0 ? (voiceBandEnergy / totalEnergy) : 0;
+
+          const profile = getActiveNoiseProfile();
+          const dynamicThreshold = Math.max(profile.baseRms, ambientNoiseFloorRms * profile.ambientMultiplier);
+
+          // Update adaptive ambient noise floor slowly when below speech threshold
+          if (rms < dynamicThreshold * 0.75) {
+            ambientNoiseFloorRms = (ambientNoiseFloorRms * 0.96) + (Math.min(rms, 0.045) * 0.04);
+          }
+
+          const isCloseHumanSpeech = (rms > dynamicThreshold) && (voiceBandRatio >= profile.minVoiceBandRatio);
+          if (isCloseHumanSpeech) {
+            isMainSpeakerNearMic = true;
+            lastMainSpeakerVoiceAt = Date.now();
+          } else if (Date.now() - lastMainSpeakerVoiceAt > 900) {
+            isMainSpeakerNearMic = false;
+          }
+
+          // Update subtle mic meter bar in Card 2 every 4 frames
+          uiFrameCounter++;
+          if (uiFrameCounter % 4 === 0) {
+            const meterEl = document.getElementById("micLevelMeterFill");
+            const floorBadge = document.getElementById("ambientFloorBadge");
+            if (meterEl) {
+              const pct = Math.min(100, Math.round((rms / (dynamicThreshold * 1.4)) * 100));
+              meterEl.style.width = `${pct}%`;
+              meterEl.className = isCloseHumanSpeech
+                ? "h-full bg-emerald-500 transition-all duration-75"
+                : "h-full bg-slate-400 transition-all duration-75";
+            }
+            if (floorBadge) {
+              floorBadge.textContent = `Gate: ${dynamicThreshold.toFixed(3)}`;
+            }
+          }
+
+          if (isAISpeaking) {
+            if (isCloseHumanSpeech && (Date.now() - speechStartedAt > 320)) {
               consecutiveVoiceFrames++;
-              if (consecutiveVoiceFrames >= 2) {
+              if (consecutiveVoiceFrames >= profile.requiredFrames) {
                 consecutiveVoiceFrames = 0;
                 triggerInstantBargeInCutoff();
               }
@@ -1120,7 +1248,6 @@
       if (liveInterim && !turnFinalizedBuffer && !turnInterimBuffer) {
         liveInterim.textContent = "Noura stopped — continue speaking your full thought...";
       }
-      // Give the user a generous 2.4-second initial window after interrupting to finish their full thought
       scheduleSmartCommitTimer(2400);
     }
 
@@ -1230,9 +1357,57 @@
      * Evaluates all SpeechRecognition alternatives (up to 4) and selects the candidate
      * that best matches RAKEZ domain terminology (offers, RAKEZ, renewal, warehouse, UBO, visa, etc.).
      */
+    const VALID_SINGLE_WORD_UTTERANCES = new Set([
+      "yes", "yeah", "yep", "no", "nope", "sure", "okay", "ok", "speaking",
+      "hello", "hi", "bye", "goodbye", "thanks", "repeat", "wait", "hold",
+      "stop", "continue", "next", "proceed", "resume", "offers", "1", "2", "3", "4", "5"
+    ]);
+
+    function isBackgroundNoiseArtifact(text, confidence, isFinal) {
+      const clean = text.toLowerCase().replace(/[^a-z0-9\s]/g, "").trim();
+      if (!clean) return true;
+
+      // Reject pure vocal hesitation / cough / room noise artifacts
+      if (/^(uh+|um+|hm+|hmm+|ah+|oh+|er+|mm+|huh|shh+)$/i.test(clean)) {
+        return true;
+      }
+
+      const words = clean.split(/\s+/).filter(Boolean);
+      const profile = getActiveNoiseProfile();
+
+      // Reject low-confidence final transcripts caused by distant background voices
+      if (isFinal && typeof confidence === "number" && confidence > 0 && confidence < profile.minSttConfidence) {
+        // Allow valid explicit 1-word commands if confidence is at least moderate
+        if (!(words.length === 1 && VALID_SINGLE_WORD_UTTERANCES.has(words[0]) && confidence >= 0.5)) {
+          return true;
+        }
+      }
+
+      // In strict noise mode on desktop, if a short 1-2 word blip arrives when main speaker
+      // was NOT detected near the microphone in the last 1.5 seconds, reject it as background chatter
+      if (!isMobileDevice && document.getElementById("noiseGateModeSelect")?.value === "noisy_strict") {
+        const recentlySpokeNearMic = isMainSpeakerNearMic || (Date.now() - lastMainSpeakerVoiceAt < 1600);
+        if (!recentlySpokeNearMic && words.length <= 2) {
+          return true;
+        }
+      }
+
+      // Reject stray 1-word non-command fragments from background noise
+      if (isFinal && words.length === 1 && !VALID_SINGLE_WORD_UTTERANCES.has(words[0]) && words[0].length <= 4) {
+        return true;
+      }
+
+      return false;
+    }
+
+    /**
+     * Evaluates all SpeechRecognition alternatives (up to 4) and selects the candidate
+     * that best matches RAKEZ domain terminology, returning { text, confidence }.
+     */
     function pickBestDomainTranscript(speechResultListItem) {
-      if (!speechResultListItem || speechResultListItem.length === 0) return "";
+      if (!speechResultListItem || speechResultListItem.length === 0) return { text: "", confidence: 0 };
       let bestText = speechResultListItem[0].transcript || "";
+      let bestConfidence = speechResultListItem[0].confidence || 0;
       let bestScore = -1;
 
       const domainBoostTerms = [
@@ -1244,10 +1419,10 @@
       for (let j = 0; j < speechResultListItem.length; j++) {
         const rawAlt = (speechResultListItem[j].transcript || "").trim();
         if (!rawAlt) continue;
+        const altConf = speechResultListItem[j].confidence || 0;
         const normalizedAlt = normalizeTranscriptForRAKEZ(rawAlt);
         const lowerAlt = normalizedAlt.toLowerCase();
 
-        // Base preference slightly favors higher-confidence rank 0, but boosts domain matches strongly
         let score = (speechResultListItem.length - j) * 2;
         for (const term of domainBoostTerms) {
           if (lowerAlt.includes(term)) {
@@ -1257,9 +1432,10 @@
         if (score > bestScore) {
           bestScore = score;
           bestText = normalizedAlt;
+          bestConfidence = altConf;
         }
       }
-      return bestText;
+      return { text: bestText, confidence: bestConfidence };
     }
 
     function clearTurnTranscriptBuffers() {
@@ -1578,22 +1754,37 @@
           let currentSessionInterim = "";
 
           for (let i = event.resultIndex; i < event.results.length; ++i) {
-            const chunk = pickBestDomainTranscript(event.results[i]);
-            if (event.results[i].isFinal) {
+            const isFinal = event.results[i].isFinal;
+            const { text: chunk, confidence } = pickBestDomainTranscript(event.results[i]);
+            if (!chunk) continue;
+
+            // Filter out ambient background noise, distant voices, and filler artifacts
+            if (isBackgroundNoiseArtifact(chunk, confidence, isFinal)) {
+              continue;
+            }
+
+            if (isFinal) {
               currentSessionFinal += " " + chunk;
             } else {
-              currentSessionInterim += chunk;
+              currentSessionInterim += " " + chunk;
             }
           }
 
           const candidateHeard = (currentSessionFinal + " " + currentSessionInterim).trim();
+          if (!candidateHeard) return;
 
-          // If Noura is currently speaking, check if this is speaker echo or real customer barge-in
-          if (isAISpeaking && candidateHeard) {
+          // If Noura is currently speaking, require real close-mic presence OR >= minBargeInWords / explicit command
+          if (isAISpeaking) {
             if (isLikelyAISpeakerEcho(candidateHeard)) {
               return;
             }
-            // Genuine customer interruption! Stop Noura immediately and keep accumulating user's full speech
+            const profile = getActiveNoiseProfile();
+            const heardWords = candidateHeard.toLowerCase().replace(/[^a-z0-9\s]/g, "").trim().split(/\s+/).filter(Boolean);
+            const isExplicitInterruptCmd = /^(wait|hold|stop|pause|excuse me|sorry|noura|question|repeat)/i.test(candidateHeard);
+            const hasEnoughSpeech = heardWords.length >= profile.minBargeInWords || isExplicitInterruptCmd || isMainSpeakerNearMic;
+            if (!hasEnoughSpeech) {
+              return;
+            }
             triggerInstantBargeInCutoff();
           }
 
@@ -3129,6 +3320,20 @@ Return ONLY a valid JSON object matching this exact schema:
             mode === "force_basic" ? tiers.basic : `${tiers.basic} ↔ ${tiers.advanced}`,
             "Ready"
           );
+        });
+      }
+      const savedGate = localStorage.getItem("rakez_noise_gate_mode");
+      const gateSelect = document.getElementById("noiseGateModeSelect");
+      if (gateSelect) {
+        if (savedGate && Array.from(gateSelect.options).some(o => o.value === savedGate)) {
+          gateSelect.value = savedGate;
+        }
+        gateSelect.addEventListener("change", (e) => {
+          localStorage.setItem("rakez_noise_gate_mode", e.target.value);
+          const p = getActiveNoiseProfile();
+          const floorBadge = document.getElementById("ambientFloorBadge");
+          if (floorBadge) floorBadge.textContent = `Gate: ${p.baseRms.toFixed(3)}`;
+          showToast(`Microphone Noise Isolation set to: ${e.target.options[e.target.selectedIndex].text}`);
         });
       }
       syncPresetToEditableFields();
